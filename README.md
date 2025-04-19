@@ -7,6 +7,9 @@
 ## 功能特点
 
 - **Vue 3 技术栈**：使用 Vue 3 的 Composition API 构建
+- **Pinia 状态管理**：使用 Pinia 进行高效的状态管理
+- **Vue Router**：使用 Vue Router 实现路由导航
+- **Vite 构建工具**：使用 Vite 优化开发和构建流程
 - **主题化学习**：预设多个学习主题，每个主题有独特的视觉标识
 - **TSV 配置文件**：通过 TSV 文件加载闪卡内容，易于编辑和扩展
 - **交互式卡片**：点击卡片翻转查看答案，键盘快捷键支持
@@ -14,11 +17,10 @@
 - **学习进度跟踪**：自动记录学习进度，支持中断后继续学习
 - **进度可视化**：直观展示每个主题的学习完成度
 - **响应式设计**：适配桌面和移动设备
-- **无需构建**：使用 CDN 引入 Vue 3，无需本地安装 Node.js
 
 ## 快速开始
 
-<!-- 
+<!--
 ### 在线使用
 
 访问 [在线演示](https://example.com/flashcard-app) 直接使用应用。 -->
@@ -31,19 +33,38 @@
    cd flashcard-web
    ```
 
-2. 使用任意 HTTP 服务器启动应用：
+2. 安装依赖：
    ```bash
-   # 使用 Python 内置 HTTP 服务器
-   python -m http.server 8000
-   
-   # 或使用 Node.js http-server (需要先安装)
-   npx http-server
+   npm install
+   # 或使用 yarn
+   yarn
    ```
 
-3. 在浏览器中访问：
+3. 启动开发服务器：
+   ```bash
+   npm run dev
+   # 或使用 yarn
+   yarn dev
    ```
-   http://localhost:8000
+
+4. 在浏览器中访问：
    ```
+   http://localhost:5173
+   ```
+
+### 构建生产版本
+
+```bash
+# 构建生产版本
+npm run build
+# 或使用 yarn
+yarn build
+
+# 预览生产版本
+npm run preview
+# 或使用 yarn
+yarn preview
+```
 
 ## 使用指南
 
@@ -109,9 +130,37 @@
 ```
 flashcard_web/
 │
-├── index.html          # 主HTML文件，包含Vue模板
-├── app.js              # Vue应用逻辑
-├── styles.css          # 应用样式
+├── index.html          # 主HTML文件
+├── vite.config.js      # Vite配置文件
+├── package.json        # 项目依赖和脚本
+│
+├── public/             # 静态资源目录
+│   └── favicon.ico     # 网站图标
+│
+├── src/                # 源代码目录
+│   ├── main.js         # 应用入口文件
+│   ├── App.vue         # 根组件
+│   ├── assets/         # 资源文件
+│   │   └── main.css    # 全局样式
+│   │
+│   ├── components/     # 组件目录
+│   │   ├── LoadingOverlay.vue    # 加载状态组件
+│   │   ├── ThemeCard.vue         # 主题卡片组件
+│   │   ├── ThemeUploadForm.vue   # 主题上传表单组件
+│   │   └── ThemeUpdateForm.vue   # 主题更新表单组件
+│   │
+│   ├── views/          # 视图组件
+│   │   ├── HomeView.vue          # 主页视图
+│   │   ├── ThemeView.vue         # 主题学习视图
+│   │   └── CustomThemeView.vue   # 自定义主题视图
+│   │
+│   ├── router/         # 路由配置
+│   │   └── index.js    # 路由定义
+│   │
+│   └── stores/         # Pinia状态管理
+│       ├── theme.js    # 主题状态管理
+│       ├── flashcard.js # 闪卡状态管理
+│       └── progress.js # 学习进度状态管理
 │
 └── themes/             # 主题目录
     ├── index.json      # 主题索引文件，列出所有可用主题
@@ -179,7 +228,10 @@ question	answer
 
 ## 技术实现
 
-- **Vue 3**：使用 Composition API 进行状态管理和组件逻辑
+- **Vue 3 Composition API**：使用 Composition API 进行组件逻辑组织
+- **Pinia**：使用 Pinia 进行状态管理，替代 Vuex
+- **Vue Router**：实现单页应用路由导航
+- **Vite**：使用 Vite 进行快速开发和优化构建
 - **Fetch API**：加载主题配置和闪卡内容
 - **CSS 动画**：实现卡片翻转和悬浮效果
 - **LocalStorage**：保存用户上传的自定义闪卡和学习进度
