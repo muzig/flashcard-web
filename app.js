@@ -1,6 +1,21 @@
 // 创建 Vue 应用
 const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
 
+// 创建下载链接的辅助函数
+function createDownloadLink(content, filename) {
+    const blob = new Blob([content], { type: 'text/tab-separated-values' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
+
 const app = createApp({
     template: '#app-template',
     setup() {
@@ -12,6 +27,9 @@ const app = createApp({
         const selectedTheme = ref('');
         const currentThemeData = ref(null);
         const isLoading = ref(false);
+        const showThemeUploadForm = ref(false);
+        const showThemeUpdateForm = ref(false);
+        const themeToUpdate = ref(null);
 
         // 计算当前卡片
         const currentCard = computed(() => {
@@ -35,15 +53,7 @@ const app = createApp({
 
                 const loadedThemes = await Promise.all(themePromises);
 
-                // 添加自定义主题选项
-                loadedThemes.push({
-                    id: 'custom',
-                    name: '自定义主题',
-                    description: '上传自己的TSV文件，创建自定义闪卡集合。',
-                    icon: 'upload',
-                    color: '#8e44ad',
-                    cards: null
-                });
+                // 自定义主题选项在界面上单独显示，不再添加到主题列表中
 
                 themes.value = loadedThemes;
             } catch (error) {
@@ -98,6 +108,122 @@ const app = createApp({
                 alert('读取文件失败，请重试。');
             };
             reader.readAsText(file);
+        };
+
+        // 下载闪卡模板
+        const downloadTemplate = () => {
+            const templateContent = 'question\tanswer\n问题1\t答案1\n问题2\t答案2\n问题3\t答案3';
+            createDownloadLink(templateContent, 'flashcard_template.tsv');
+        };
+
+        // 显示上传新主题表单
+        const showNewThemeForm = () => {
+            showThemeUploadForm.value = true;
+            showThemeUpdateForm.value = false;
+        };
+
+        // 显示更新主题表单
+        const showUpdateThemeForm = (theme) => {
+            themeToUpdate.value = theme;
+            showThemeUpdateForm.value = true;
+            showThemeUploadForm.value = false;
+        };
+
+        // 处理新主题上传
+        const handleNewThemeUpload = async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                isLoading.value = true;
+
+                // 读取上传的TSV文件
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+
+                    // 生成一个随机的主题ID
+                    const themeId = 'theme_' + Math.random().toString(36).substring(2, 10);
+
+                    // 创建新主题对象
+                    const newTheme = {
+                        id: themeId,
+                        name: file.name.replace(/\.[^\.]+$/, ''), // 使用文件名作为主题名
+                        description: '自定义上传的主题',
+                        icon: themeId.charAt(0),
+                        color: '#' + Math.floor(Math.random()*16777215).toString(16), // 随机颜色
+                        cards: null
+                    };
+
+                    // 将新主题添加到主题列表
+                    themes.value.push(newTheme);
+
+                    // 选择新主题并加载闪卡
+                    selectedTheme.value = themeId;
+                    currentThemeData.value = newTheme;
+                    parseAndLoadCards(text);
+
+                    // 关闭上传表单
+                    showThemeUploadForm.value = false;
+                    isLoading.value = false;
+
+                    alert('新主题上传成功！');
+                };
+
+                reader.onerror = () => {
+                    alert('读取文件失败，请重试。');
+                    isLoading.value = false;
+                };
+
+                reader.readAsText(file);
+
+            } catch (error) {
+                console.error('上传主题失败:', error);
+                alert('上传主题失败，请重试。');
+                isLoading.value = false;
+            }
+        };
+
+        // 处理主题更新
+        const handleThemeUpdate = async (event) => {
+            const file = event.target.files[0];
+            if (!file || !themeToUpdate.value) return;
+
+            try {
+                isLoading.value = true;
+
+                // 读取上传的TSV文件
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+
+                    // 选择要更新的主题
+                    selectedTheme.value = themeToUpdate.value.id;
+                    currentThemeData.value = themeToUpdate.value;
+
+                    // 解析并加载闪卡
+                    parseAndLoadCards(text);
+
+                    // 关闭更新表单
+                    showThemeUpdateForm.value = false;
+                    themeToUpdate.value = null;
+                    isLoading.value = false;
+
+                    alert('主题更新成功！');
+                };
+
+                reader.onerror = () => {
+                    alert('读取文件失败，请重试。');
+                    isLoading.value = false;
+                };
+
+                reader.readAsText(file);
+
+            } catch (error) {
+                console.error('更新主题失败:', error);
+                alert('更新主题失败，请重试。');
+                isLoading.value = false;
+            }
         };
 
         // 解析TSV文件并加载卡片
@@ -185,6 +311,22 @@ const app = createApp({
             document.removeEventListener('keydown', handleKeyDown);
         });
 
+        // 自定义主题数据
+        const customTheme = {
+            id: 'custom',
+            name: '自定义主题',
+            description: '上传自己的TSV文件，创建自定义闪卡集合。',
+            icon: 'upload',
+            color: '#8e44ad',
+            cards: null
+        };
+
+        // 加载自定义主题
+        const loadCustomTheme = () => {
+            selectedTheme.value = 'custom';
+            currentThemeData.value = customTheme;
+        };
+
         return {
             themes,
             flashcards,
@@ -193,14 +335,24 @@ const app = createApp({
             selectedTheme,
             currentThemeData,
             isLoading,
+            showThemeUploadForm,
+            showThemeUpdateForm,
+            themeToUpdate,
             currentCard,
+            customTheme,
             loadTheme,
             loadAllThemes,
+            loadCustomTheme,
             handleFileUpload,
             flipCard,
             prevCard,
             nextCard,
-            resetCards
+            resetCards,
+            downloadTemplate,
+            showNewThemeForm,
+            showUpdateThemeForm,
+            handleNewThemeUpload,
+            handleThemeUpdate
         };
     }
 });

@@ -28,8 +28,24 @@
                 <p>正在加载...</p>
             </div>
 
+            <!-- 主题管理按钮 -->
+            <div class="theme-management" v-if="!flashcards.length && !selectedTheme">
+                <button class="action-btn" @click="showNewThemeForm">上传新主题</button>
+            </div>
+
+            <!-- 自定义主题选项 -->
+            <div class="custom-theme-card" v-if="!flashcards.length && !showThemeUploadForm && !showThemeUpdateForm" @click="loadCustomTheme">
+                <div class="custom-theme-icon" :style="{ backgroundColor: customTheme.color }">
+                    {{ customTheme.icon.charAt(0).toUpperCase() }}
+                </div>
+                <div class="custom-theme-content">
+                    <h3>{{ customTheme.name }}</h3>
+                    <p>{{ customTheme.description }}</p>
+                </div>
+            </div>
+
             <!-- 主题选择 -->
-            <div class="theme-selector" v-if="!flashcards.length">
+            <div class="theme-selector" v-if="!flashcards.length && !showThemeUploadForm && !showThemeUpdateForm">
                 <h2>选择学习主题</h2>
                 <div class="theme-cards">
                     <div
@@ -46,16 +62,43 @@
                             <h3>{{ theme.name }}</h3>
                             <p>{{ theme.description }}</p>
                         </div>
+                        <div class="theme-actions" @click.stop>
+                            <button class="update-btn" @click="showUpdateThemeForm(theme)">更新</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- 上传新主题表单 -->
+            <div class="file-upload" v-if="showThemeUploadForm">
+                <h2>上传新主题</h2>
+                <p>上传包含闪卡内容的TSV文件</p>
+                <input type="file" @change="handleNewThemeUpload" accept=".tsv,.txt" id="theme-upload">
+                <label for="theme-upload" class="upload-btn">选择文件</label>
+                <button class="cancel-btn" @click="showThemeUploadForm = false">取消</button>
+            </div>
+
+            <!-- 更新主题表单 -->
+            <div class="file-upload" v-if="showThemeUpdateForm && themeToUpdate">
+                <h2>更新主题: {{ themeToUpdate.name }}</h2>
+                <p>上传更新后的闪卡内容文件</p>
+                <input type="file" @change="handleThemeUpdate" accept=".tsv,.txt" id="theme-update">
+                <label for="theme-update" class="upload-btn">选择文件</label>
+                <button class="cancel-btn" @click="showThemeUpdateForm = false">取消</button>
+            </div>
+
             <!-- 文件上传 -->
-            <div class="file-upload" v-if="!flashcards.length && selectedTheme === 'custom'">
+            <div class="file-upload" v-if="!flashcards.length && selectedTheme === 'custom' && !showThemeUploadForm && !showThemeUpdateForm">
                 <h2>上传自定义TSV文件</h2>
                 <p>上传包含问题和答案的TSV文件，格式为：问题 [Tab] 答案</p>
-                <input type="file" @change="handleFileUpload" accept=".tsv,.txt" id="file-upload">
-                <label for="file-upload" class="upload-btn">选择文件</label>
+                <div class="file-actions">
+                    <div>
+                        <input type="file" @change="handleFileUpload" accept=".tsv,.txt" id="file-upload">
+                        <label for="file-upload" class="upload-btn">选择文件</label>
+                    </div>
+                    <button class="download-btn" @click="downloadTemplate">下载模板</button>
+                </div>
+                <button class="cancel-btn" style="margin-top: 15px;" @click="resetCards">返回主页</button>
             </div>
 
             <!-- 闪卡展示区域 -->
