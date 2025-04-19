@@ -2,7 +2,7 @@
 
 一个使用 Vue 3 构建的交互式闪卡学习应用，通过 TSV 文件加载闪卡内容，支持多主题学习和自定义闪卡。
 
-![闪卡应用截图](https://via.placeholder.com/800x450.png?text=Vue+3+闪卡应用)
+![闪卡应用截图](imgs/image.png)
 
 ## 功能特点
 
@@ -16,9 +16,10 @@
 
 ## 快速开始
 
+<!-- 
 ### 在线使用
 
-访问 [在线演示](https://example.com/flashcard-app) 直接使用应用。
+访问 [在线演示](https://example.com/flashcard-app) 直接使用应用。 -->
 
 ### 本地运行
 
@@ -181,8 +182,8 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 ## 联系方式
 
 如有问题或建议，请通过以下方式联系：
-- 电子邮件：your.email@example.com
-- GitHub Issues：[提交问题](https://github.com/yourusername/flashcard-web/issues)
+
+- 电子邮件：muzig012046@gmail.com
 
 ---
 
