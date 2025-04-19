@@ -242,19 +242,32 @@ h2 {
     right: 10px;
 }
 
-.update-btn {
+.update-btn,
+.delete-theme-btn {
     padding: 5px 10px;
-    background-color: #2196F3;
     color: white;
     border: none;
     border-radius: 3px;
     cursor: pointer;
     font-size: 0.8rem;
     transition: background-color 0.3s;
+    margin-right: 5px;
+}
+
+.update-btn {
+    background-color: #2196F3;
 }
 
 .update-btn:hover {
     background-color: #0b7dda;
+}
+
+.delete-theme-btn {
+    background-color: #ff3b30;
+}
+
+.delete-theme-btn:hover {
+    background-color: #d9332b;
 }
 
 /* 当前主题样式 */
@@ -380,6 +393,14 @@ h2 {
 
 .danger-btn:hover {
     background-color: #d9332b !important;
+}
+
+.delete-btn {
+    background-color: #ff9500 !important;
+}
+
+.delete-btn:hover {
+    background-color: #e68600 !important;
 }
 
 .card-count {

@@ -64,6 +64,7 @@
                         </div>
                         <div class="theme-actions" @click.stop>
                             <button class="update-btn" @click="showUpdateThemeForm(theme)">更新</button>
+                            <button class="delete-theme-btn" @click="deleteTheme(theme)">删除</button>
                         </div>
                     </div>
                 </div>
@@ -114,6 +115,7 @@
                     <button @click="prevCard" :disabled="currentIndex === 0">上一张</button>
                     <span class="card-count">{{ currentIndex + 1 }} / {{ flashcards.length }}</span>
                     <button @click="nextCard" :disabled="currentIndex >= flashcards.length - 1">下一张</button>
+                    <button @click="deleteCurrentCard" class="delete-btn">删除当前闪卡</button>
                     <button @click="resetCards" class="danger-btn">返回主题选择</button>
                 </div>
 

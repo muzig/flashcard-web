@@ -31,6 +31,28 @@ const app = createApp({
         const showThemeUpdateForm = ref(false);
         const themeToUpdate = ref(null);
 
+        // 从localStorage加载用户主题
+        const loadUserThemes = () => {
+            try {
+                const savedThemes = localStorage.getItem('userThemes');
+                if (savedThemes) {
+                    return JSON.parse(savedThemes);
+                }
+            } catch (error) {
+                console.error('加载用户主题失败:', error);
+            }
+            return [];
+        };
+
+        // 保存用户主题到localStorage
+        const saveUserThemes = (userThemes) => {
+            try {
+                localStorage.setItem('userThemes', JSON.stringify(userThemes));
+            } catch (error) {
+                console.error('保存用户主题失败:', error);
+            }
+        };
+
         // 计算当前卡片
         const currentCard = computed(() => {
             if (flashcards.value.length === 0) {
@@ -55,7 +77,11 @@ const app = createApp({
 
                 // 自定义主题选项在界面上单独显示，不再添加到主题列表中
 
-                themes.value = loadedThemes;
+                // 加载用户保存的主题
+                const userThemes = loadUserThemes();
+
+                // 合并系统主题和用户主题
+                themes.value = [...loadedThemes, ...userThemes];
             } catch (error) {
                 console.error('加载主题列表失败:', error);
                 alert('加载主题列表失败，请刷新页面重试。');
@@ -75,7 +101,7 @@ const app = createApp({
             }
 
             const theme = themes.value.find(t => t.id === themeId);
-            if (!theme || !theme.cards) {
+            if (!theme) {
                 return;
             }
 
@@ -83,9 +109,20 @@ const app = createApp({
 
             try {
                 isLoading.value = true;
-                const response = await fetch(`themes/${theme.id}/${theme.cards}`);
-                const text = await response.text();
-                parseAndLoadCards(text);
+
+                // 检查是否是用户上传的主题
+                const userThemes = loadUserThemes();
+                const userTheme = userThemes.find(t => t.id === themeId);
+
+                if (userTheme && userTheme.cardsContent) {
+                    // 如果是用户主题，直接使用保存的内容
+                    parseAndLoadCards(userTheme.cardsContent);
+                } else if (theme.cards) {
+                    // 如果是系统主题，从文件加载
+                    const response = await fetch(`themes/${theme.id}/${theme.cards}`);
+                    const text = await response.text();
+                    parseAndLoadCards(text);
+                }
             } catch (error) {
                 console.error('加载主题失败:', error);
                 alert('加载主题失败，请重试或选择其他主题。');
@@ -155,8 +192,19 @@ const app = createApp({
                         cards: null
                     };
 
+                    // 创建包含闪卡内容的主题对象
+                    const themeWithCards = {
+                        ...newTheme,
+                        cardsContent: text  // 保存原始TSV内容
+                    };
+
                     // 将新主题添加到主题列表
                     themes.value.push(newTheme);
+
+                    // 保存到localStorage
+                    const userThemes = loadUserThemes();
+                    userThemes.push(themeWithCards);
+                    saveUserThemes(userThemes);
 
                     // 选择新主题并加载闪卡
                     selectedTheme.value = themeId;
@@ -200,6 +248,24 @@ const app = createApp({
                     // 选择要更新的主题
                     selectedTheme.value = themeToUpdate.value.id;
                     currentThemeData.value = themeToUpdate.value;
+
+                    // 更新localStorage中的主题
+                    const userThemes = loadUserThemes();
+                    const themeIndex = userThemes.findIndex(t => t.id === themeToUpdate.value.id);
+
+                    if (themeIndex !== -1) {
+                        // 更新已存在的用户主题
+                        userThemes[themeIndex].cardsContent = text;
+                        saveUserThemes(userThemes);
+                    } else {
+                        // 如果是系统主题，创建一个副本作为用户主题
+                        const themeWithCards = {
+                            ...themeToUpdate.value,
+                            cardsContent: text
+                        };
+                        userThemes.push(themeWithCards);
+                        saveUserThemes(userThemes);
+                    }
 
                     // 解析并加载闪卡
                     parseAndLoadCards(text);
@@ -278,6 +344,54 @@ const app = createApp({
             }
         };
 
+        // 删除当前闪卡
+        const deleteCurrentCard = () => {
+            if (flashcards.value.length === 0) return;
+
+            // 确认删除
+            if (!confirm('确定要删除当前闪卡吗？')) return;
+
+            // 从数组中删除当前闪卡
+            flashcards.value.splice(currentIndex.value, 1);
+
+            // 如果删除后没有闪卡了
+            if (flashcards.value.length === 0) {
+                resetCards();
+                return;
+            }
+
+            // 如果删除的是最后一张卡片，则将索引移到1
+            if (currentIndex.value >= flashcards.value.length) {
+                currentIndex.value = flashcards.value.length - 1;
+            }
+
+            // 重置翻转状态
+            isFlipped.value = false;
+
+            // 如果是用户主题，更新localStorage
+            if (selectedTheme.value && selectedTheme.value !== 'custom') {
+                updateThemeInLocalStorage();
+            }
+        };
+
+        // 更新localStorage中的主题数据
+        const updateThemeInLocalStorage = () => {
+            const userThemes = loadUserThemes();
+            const themeIndex = userThemes.findIndex(t => t.id === selectedTheme.value);
+
+            if (themeIndex !== -1) {
+                // 将当前闪卡数组转换回TSV格式
+                let tsvContent = 'question\tanswer\n';
+                flashcards.value.forEach(card => {
+                    tsvContent += `${card.question}\t${card.answer}\n`;
+                });
+
+                // 更新用户主题的内容
+                userThemes[themeIndex].cardsContent = tsvContent;
+                saveUserThemes(userThemes);
+            }
+        };
+
         // 重置卡片
         const resetCards = () => {
             flashcards.value = [];
@@ -310,6 +424,41 @@ const app = createApp({
         onUnmounted(() => {
             document.removeEventListener('keydown', handleKeyDown);
         });
+
+        // 删除主题
+        const deleteTheme = (theme) => {
+            // 确认删除
+            if (!confirm(`确定要删除主题 "${theme.name}" 吗？该操作无法撤销。`)) return;
+
+            // 判断是否是系统预设主题
+            const isSystemTheme = ['html', 'javascript', 'vue'].includes(theme.id);
+
+            if (isSystemTheme) {
+                alert('无法删除系统预设主题。');
+                return;
+            }
+
+            // 从主题列表中删除
+            const themeIndex = themes.value.findIndex(t => t.id === theme.id);
+            if (themeIndex !== -1) {
+                themes.value.splice(themeIndex, 1);
+            }
+
+            // 从localStorage中删除
+            const userThemes = loadUserThemes();
+            const userThemeIndex = userThemes.findIndex(t => t.id === theme.id);
+            if (userThemeIndex !== -1) {
+                userThemes.splice(userThemeIndex, 1);
+                saveUserThemes(userThemes);
+            }
+
+            // 如果当前正在查看该主题，则返回主页
+            if (selectedTheme.value === theme.id) {
+                resetCards();
+            }
+
+            alert(`主题 "${theme.name}" 已成功删除。`);
+        };
 
         // 自定义主题数据
         const customTheme = {
@@ -348,6 +497,8 @@ const app = createApp({
             prevCard,
             nextCard,
             resetCards,
+            deleteCurrentCard,
+            deleteTheme,
             downloadTemplate,
             showNewThemeForm,
             showUpdateThemeForm,
