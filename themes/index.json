@@ -1,0 +1,16 @@
+{
+  "themes": [
+    {
+      "id": "html",
+      "path": "html/meta.json"
+    },
+    {
+      "id": "javascript",
+      "path": "javascript/meta.json"
+    },
+    {
+      "id": "vue",
+      "path": "vue/meta.json"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "id": "html",
+  "name": "HTML/CSS 基础",
+  "description": "学习网页开发的基础知识，包括HTML标签、CSS样式等内容。",
+  "icon": "html5",
+  "color": "#e44d26",
+  "cards": "cards.tsv"
+}

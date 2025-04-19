@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <!-- 引入 Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
+
 <body>
     <div id="app">
         <!-- Vue 应用将在这里挂载 -->
@@ -20,24 +22,36 @@
                 <h1>闪卡学习应用</h1>
             </header>
 
+            <!-- 加载状态 -->
+            <div class="loading-overlay" v-if="isLoading">
+                <div class="loading-spinner"></div>
+                <p>正在加载...</p>
+            </div>
+
             <!-- 主题选择 -->
             <div class="theme-selector" v-if="!flashcards.length">
                 <h2>选择学习主题</h2>
                 <div class="theme-cards">
-                    <div 
-                        v-for="theme in themes" 
-                        :key="theme.id" 
+                    <div
+                        v-for="theme in themes"
+                        :key="theme.id"
                         class="theme-card"
                         :class="{ active: selectedTheme === theme.id }"
+                        :style="{ borderLeftColor: theme.color }"
                         @click="loadTheme(theme.id)">
-                        <h3>{{ theme.name }}</h3>
-                        <p>{{ theme.description }}</p>
+                        <div class="theme-icon" :style="{ backgroundColor: theme.color }">
+                            {{ theme.icon.charAt(0).toUpperCase() }}
+                        </div>
+                        <div class="theme-content">
+                            <h3>{{ theme.name }}</h3>
+                            <p>{{ theme.description }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- 文件上传 -->
-            <div class="file-upload" v-if="!flashcards.length">
+            <div class="file-upload" v-if="!flashcards.length && selectedTheme === 'custom'">
                 <h2>上传自定义TSV文件</h2>
                 <p>上传包含问题和答案的TSV文件，格式为：问题 [Tab] 答案</p>
                 <input type="file" @change="handleFileUpload" accept=".tsv,.txt" id="file-upload">
@@ -46,6 +60,13 @@
 
             <!-- 闪卡展示区域 -->
             <div v-if="flashcards.length" class="flashcard-section">
+                <div class="current-theme" v-if="currentThemeData">
+                    <div class="theme-icon" :style="{ backgroundColor: currentThemeData.color }">
+                        {{ currentThemeData.icon.charAt(0).toUpperCase() }}
+                    </div>
+                    <h2>{{ currentThemeData.name }}</h2>
+                </div>
+
                 <div class="controls">
                     <button @click="prevCard" :disabled="currentIndex === 0">上一张</button>
                     <span class="card-count">{{ currentIndex + 1 }} / {{ flashcards.length }}</span>
@@ -54,7 +75,8 @@
                 </div>
 
                 <div class="flashcard-container">
-                    <div class="flashcard" :class="{ flipped: isFlipped }" @click="flipCard">
+                    <div class="flashcard" :class="{ flipped: isFlipped }" @click="flipCard"
+                         :style="currentThemeData ? { '--theme-color': currentThemeData.color } : {}">
                         <div class="flashcard-front">
                             <div class="flashcard-content">{{ currentCard.question }}</div>
                         </div>
@@ -69,4 +91,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>

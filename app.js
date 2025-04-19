@@ -4,39 +4,14 @@ const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
 const app = createApp({
     template: '#app-template',
     setup() {
-        // 主题列表
-        const themes = [
-            {
-                id: 'html',
-                name: 'HTML/CSS 基础',
-                description: '学习网页开发的基础知识，包括HTML标签、CSS样式等内容。',
-                file: 'html_cards.tsv'
-            },
-            {
-                id: 'js',
-                name: 'JavaScript 基础',
-                description: '学习JavaScript编程语言的核心概念和常用功能。',
-                file: 'js_cards.tsv'
-            },
-            {
-                id: 'vue',
-                name: 'Vue.js 框架',
-                description: '学习Vue.js框架的基本概念、组件化开发和状态管理。',
-                file: 'vue_cards.tsv'
-            },
-            {
-                id: 'custom',
-                name: '自定义主题',
-                description: '上传自己的TSV文件，创建自定义闪卡集合。',
-                file: null
-            }
-        ];
-
         // 状态变量
+        const themes = ref([]);
         const flashcards = ref([]);
         const currentIndex = ref(0);
         const isFlipped = ref(false);
         const selectedTheme = ref('');
+        const currentThemeData = ref(null);
+        const isLoading = ref(false);
 
         // 计算当前卡片
         const currentCard = computed(() => {
@@ -46,27 +21,66 @@ const app = createApp({
             return flashcards.value[currentIndex.value];
         });
 
+        // 加载所有主题
+        const loadAllThemes = async () => {
+            try {
+                isLoading.value = true;
+                const response = await fetch('themes/index.json');
+                const data = await response.json();
+
+                const themePromises = data.themes.map(async (themeInfo) => {
+                    const metaResponse = await fetch(`themes/${themeInfo.path}`);
+                    return await metaResponse.json();
+                });
+
+                const loadedThemes = await Promise.all(themePromises);
+
+                // 添加自定义主题选项
+                loadedThemes.push({
+                    id: 'custom',
+                    name: '自定义主题',
+                    description: '上传自己的TSV文件，创建自定义闪卡集合。',
+                    icon: 'upload',
+                    color: '#8e44ad',
+                    cards: null
+                });
+
+                themes.value = loadedThemes;
+            } catch (error) {
+                console.error('加载主题列表失败:', error);
+                alert('加载主题列表失败，请刷新页面重试。');
+            } finally {
+                isLoading.value = false;
+            }
+        };
+
         // 加载主题
         const loadTheme = async (themeId) => {
             selectedTheme.value = themeId;
-            
+
             // 如果是自定义主题，不加载文件
             if (themeId === 'custom') {
+                currentThemeData.value = themes.value.find(t => t.id === 'custom');
                 return;
             }
-            
-            const theme = themes.find(t => t.id === themeId);
-            if (!theme || !theme.file) {
+
+            const theme = themes.value.find(t => t.id === themeId);
+            if (!theme || !theme.cards) {
                 return;
             }
-            
+
+            currentThemeData.value = theme;
+
             try {
-                const response = await fetch(theme.file);
+                isLoading.value = true;
+                const response = await fetch(`themes/${theme.id}/${theme.cards}`);
                 const text = await response.text();
                 parseAndLoadCards(text);
             } catch (error) {
                 console.error('加载主题失败:', error);
                 alert('加载主题失败，请重试或选择其他主题。');
+            } finally {
+                isLoading.value = false;
             }
         };
 
@@ -74,7 +88,7 @@ const app = createApp({
         const handleFileUpload = (event) => {
             const file = event.target.files[0];
             if (!file) return;
-            
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 const text = e.target.result;
@@ -91,23 +105,23 @@ const app = createApp({
             try {
                 const lines = text.trim().split('\n');
                 const cards = [];
-                
+
                 // 跳过标题行
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
-                    
+
                     const [question, answer] = line.split('\t');
                     if (question && answer) {
                         cards.push({ question, answer });
                     }
                 }
-                
+
                 if (cards.length === 0) {
                     alert('没有找到有效的闪卡数据，请检查文件格式。');
                     return;
                 }
-                
+
                 flashcards.value = cards;
                 currentIndex.value = 0;
                 isFlipped.value = false;
@@ -149,7 +163,7 @@ const app = createApp({
         // 键盘事件处理
         const handleKeyDown = (e) => {
             if (flashcards.value.length === 0) return;
-            
+
             if (e.key === 'ArrowLeft') {
                 prevCard();
             } else if (e.key === 'ArrowRight') {
@@ -163,6 +177,8 @@ const app = createApp({
         // 组件挂载和卸载时添加/移除键盘事件监听
         onMounted(() => {
             document.addEventListener('keydown', handleKeyDown);
+            // 加载所有主题
+            loadAllThemes();
         });
 
         onUnmounted(() => {
@@ -175,8 +191,11 @@ const app = createApp({
             currentIndex,
             isFlipped,
             selectedTheme,
+            currentThemeData,
+            isLoading,
             currentCard,
             loadTheme,
+            loadAllThemes,
             handleFileUpload,
             flipCard,
             prevCard,
