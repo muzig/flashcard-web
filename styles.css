@@ -1,0 +1,280 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    color: #333;
+    position: relative;
+    display: inline-block;
+}
+
+header h1:after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #ff6b00, #ff9e00);
+    border-radius: 2px;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 1.8rem;
+}
+
+/* 主题选择样式 */
+.theme-selector {
+    margin-bottom: 40px;
+}
+
+.theme-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.theme-card {
+    flex: 1;
+    min-width: 250px;
+    max-width: 350px;
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    border-left: 5px solid #ddd;
+}
+
+.theme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.theme-card.active {
+    border-left-color: #ff6b00;
+}
+
+.theme-card h3 {
+    color: #ff6b00;
+    margin-bottom: 10px;
+    font-size: 1.4rem;
+}
+
+.theme-card p {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* 文件上传样式 */
+.file-upload {
+    max-width: 600px;
+    margin: 0 auto 40px;
+    background-color: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.file-upload p {
+    margin-bottom: 20px;
+    color: #666;
+}
+
+.file-upload input[type="file"] {
+    display: none;
+}
+
+.upload-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #ff6b00;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.upload-btn:hover {
+    background-color: #e05e00;
+}
+
+/* 控制按钮样式 */
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.controls button {
+    padding: 10px 20px;
+    background-color: #ff6b00;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.controls button:hover:not(:disabled) {
+    background-color: #e05e00;
+}
+
+.controls button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.danger-btn {
+    background-color: #ff3b30 !important;
+}
+
+.danger-btn:hover {
+    background-color: #d9332b !important;
+}
+
+.card-count {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* 闪卡样式 */
+.flashcard-container {
+    display: flex;
+    justify-content: center;
+    perspective: 1000px;
+    min-height: 300px;
+    margin-bottom: 50px;
+}
+
+.flashcard {
+    width: 100%;
+    max-width: 600px;
+    height: 300px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s, box-shadow 0.3s;
+    cursor: pointer;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+.flashcard.flipped {
+    transform: rotateY(180deg);
+    animation: none;
+}
+
+.flashcard-front,
+.flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    overflow: auto;
+    transition: box-shadow 0.3s;
+}
+
+.flashcard:hover .flashcard-front,
+.flashcard:hover .flashcard-back {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.flashcard-front {
+    border-left: 5px solid #ff6b00;
+}
+
+.flashcard-back {
+    transform: rotateY(180deg);
+    border-left: 5px solid #0088ff;
+}
+
+.flashcard-content {
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 1.5;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .theme-card {
+        min-width: 100%;
+    }
+
+    .flashcard {
+        max-width: 90%;
+        height: 250px;
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+
+    .file-upload {
+        padding: 20px;
+    }
+
+    .controls {
+        gap: 8px;
+    }
+
+    .controls button {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    .flashcard-content {
+        font-size: 1.2rem;
+    }
+}

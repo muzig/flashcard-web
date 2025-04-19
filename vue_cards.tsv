@@ -1,0 +1,6 @@
+question	answer
+什么是Vue.js?	Vue.js是一个用于构建用户界面的渐进式JavaScript框架，专注于视图层，易于集成到其他项目中。
+Vue 3的主要特性有哪些?	Vue 3的主要特性包括Composition API、更好的TypeScript支持、更小的包体积、更快的渲染速度以及Teleport、Fragments等新功能。
+什么是Composition API?	Composition API是Vue 3引入的一种新的组织组件逻辑的方式，它允许开发者按照功能而非选项来组织代码，提高了代码的可复用性和可维护性。
+Vue 3中的ref和reactive有什么区别?	ref用于包装基本类型值使其成为响应式，而reactive用于创建响应式对象。ref需要通过.value访问值，而reactive则直接访问属性。
+什么是Vue Router?	Vue Router是Vue.js官方的路由管理器，它与Vue.js深度集成，让构建单页面应用变得容易。

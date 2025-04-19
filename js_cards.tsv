@@ -1,0 +1,6 @@
+question	answer
+什么是JavaScript?	JavaScript是一种轻量级的解释型编程语言，主要用于为网页添加交互功能，是Web开发的三大核心技术之一。
+var、let和const的区别是什么?	var是函数作用域，可以重复声明，会变量提升；let是块级作用域，不可重复声明，不会变量提升；const与let类似，但声明后不能重新赋值。
+什么是闭包(Closure)?	闭包是指一个函数可以访问其词法作用域之外的变量，通常是通过在一个函数内部定义另一个函数实现的。
+什么是Promise?	Promise是JavaScript中处理异步操作的一种方式，它代表一个异步操作的最终完成或失败，以及其结果值。
+什么是async/await?	async/await是基于Promise的语法糖，使异步代码看起来像同步代码，更易于理解和维护。async函数总是返回一个Promise，await用于等待Promise解决。
