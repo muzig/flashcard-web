@@ -31,6 +31,11 @@ const app = createApp({
         const showThemeUpdateForm = ref(false);
         const themeToUpdate = ref(null);
 
+        // 学习进度状态变量
+        const hasProgress = ref(false);
+        const viewedCards = ref({});
+        const lastStudyTimestamp = ref(null);
+
         // 从localStorage加载用户主题
         const loadUserThemes = () => {
             try {
@@ -42,6 +47,45 @@ const app = createApp({
                 console.error('加载用户主题失败:', error);
             }
             return [];
+        };
+
+        // 从localStorage加载学习进度
+        const loadProgress = () => {
+            try {
+                const savedProgress = localStorage.getItem('learningProgress');
+                if (savedProgress) {
+                    const progress = JSON.parse(savedProgress);
+                    // 只设置进度相关的状态，不自动设置当前主题
+                    // selectedTheme.value = progress.themeId || '';
+                    // currentIndex.value = progress.cardIndex || 0;
+                    viewedCards.value = progress.viewedCards || {};
+                    lastStudyTimestamp.value = progress.timestamp || null;
+                    hasProgress.value = true;
+                    return progress; // 返回进度对象而不是布尔值
+                }
+            } catch (error) {
+                console.error('加载学习进度失败:', error);
+            }
+            return null;
+        };
+
+        // 保存学习进度到localStorage
+        const saveProgress = () => {
+            if (!selectedTheme.value || selectedTheme.value === 'custom') return;
+
+            try {
+                const progress = {
+                    themeId: selectedTheme.value,
+                    cardIndex: currentIndex.value,
+                    viewedCards: viewedCards.value,
+                    timestamp: new Date().getTime()
+                };
+                localStorage.setItem('learningProgress', JSON.stringify(progress));
+                lastStudyTimestamp.value = progress.timestamp;
+                hasProgress.value = true;
+            } catch (error) {
+                console.error('保存学习进度失败:', error);
+            }
         };
 
         // 保存用户主题到localStorage
@@ -123,6 +167,15 @@ const app = createApp({
                     const text = await response.text();
                     parseAndLoadCards(text);
                 }
+
+                // 如果是通过继续学习加载的主题，已经设置了currentIndex
+                // 检查是否需要调整索引以防止越界
+                if (currentIndex.value >= flashcards.value.length && flashcards.value.length > 0) {
+                    currentIndex.value = flashcards.value.length - 1;
+                }
+
+                // 保存新的进度
+                saveProgress();
             } catch (error) {
                 console.error('加载主题失败:', error);
                 alert('加载主题失败，请重试或选择其他主题。');
@@ -326,6 +379,18 @@ const app = createApp({
         // 翻转卡片
         const flipCard = () => {
             isFlipped.value = !isFlipped.value;
+
+            // 如果卡片被翻转到答案面，标记为已查看
+            if (isFlipped.value && selectedTheme.value && currentIndex.value >= 0) {
+                // 确保viewedCards中有当前主题的记录
+                if (!viewedCards.value[selectedTheme.value]) {
+                    viewedCards.value[selectedTheme.value] = {};
+                }
+                // 标记当前卡片为已查看
+                viewedCards.value[selectedTheme.value][currentIndex.value] = true;
+                // 保存进度
+                saveProgress();
+            }
         };
 
         // 上一张卡片
@@ -333,6 +398,7 @@ const app = createApp({
             if (currentIndex.value > 0) {
                 currentIndex.value--;
                 isFlipped.value = false;
+                saveProgress();
             }
         };
 
@@ -341,6 +407,7 @@ const app = createApp({
             if (currentIndex.value < flashcards.value.length - 1) {
                 currentIndex.value++;
                 isFlipped.value = false;
+                saveProgress();
             }
         };
 
@@ -400,6 +467,95 @@ const app = createApp({
             selectedTheme.value = '';
         };
 
+        // 重置学习进度
+        const resetProgress = () => {
+            if (confirm('确定要重置学习进度吗？这将清除所有已保存的学习记录。')) {
+                localStorage.removeItem('learningProgress');
+                viewedCards.value = {};
+                hasProgress.value = false;
+                lastStudyTimestamp.value = null;
+                alert('学习进度已重置。');
+            }
+        };
+
+        // 继续上次学习
+        const continueLastStudy = () => {
+            if (!hasProgress.value) return;
+
+            try {
+                // 重新加载进度信息获取主题ID
+                const progress = localStorage.getItem('learningProgress');
+                if (progress) {
+                    const progressData = JSON.parse(progress);
+                    if (progressData.themeId) {
+                        // 设置当前索引
+                        currentIndex.value = progressData.cardIndex || 0;
+                        // 加载上次学习的主题
+                        loadTheme(progressData.themeId);
+                        return;
+                    }
+                }
+                alert('没有找到上次学习记录或记录已损坏');
+            } catch (error) {
+                console.error('继续学习失败:', error);
+                alert('继续学习失败，请重试');
+            }
+        };
+
+        // 计算主题的学习进度
+        const getThemeProgress = (themeId) => {
+            if (!viewedCards.value[themeId]) return { completed: 0, total: 0, percentage: 0 };
+
+            // 获取该主题的闪卡总数
+            let total = 0;
+            if (themeId === selectedTheme.value && flashcards.value.length > 0) {
+                total = flashcards.value.length;
+            } else {
+                // 尝试从用户主题中获取
+                const userThemes = loadUserThemes();
+                const userTheme = userThemes.find(t => t.id === themeId);
+                if (userTheme && userTheme.cardsContent) {
+                    // 简单计算行数减去标题行
+                    const lines = userTheme.cardsContent.trim().split('\n');
+                    total = Math.max(0, lines.length - 1);
+                }
+            }
+
+            // 计算已完成数量
+            const completed = Object.keys(viewedCards.value[themeId]).length;
+
+            // 计算百分比
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            return { completed, total, percentage };
+        };
+
+        // 格式化时间戳为友好的时间格式
+        const formatLastStudyTime = () => {
+            if (!lastStudyTimestamp.value) return '';
+
+            const now = new Date();
+            const lastTime = new Date(lastStudyTimestamp.value);
+            const diffMs = now - lastTime;
+
+            // 转换为分钟
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+            if (diffMinutes < 1) return '刚刚';
+            if (diffMinutes < 60) return `${diffMinutes}分钟前`;
+
+            // 转换为小时
+            const diffHours = Math.floor(diffMinutes / 60);
+            if (diffHours < 24) return `${diffHours}小时前`;
+
+            // 转换为天
+            const diffDays = Math.floor(diffHours / 24);
+            if (diffDays < 30) return `${diffDays}天前`;
+
+            // 显示具体日期
+            return `${lastTime.getFullYear()}-${lastTime.getMonth()+1}-${lastTime.getDate()}`;
+        };
+
         // 键盘事件处理
         const handleKeyDown = (e) => {
             if (flashcards.value.length === 0) return;
@@ -419,6 +575,8 @@ const app = createApp({
             document.addEventListener('keydown', handleKeyDown);
             // 加载所有主题
             loadAllThemes();
+            // 尝试加载学习进度，但不自动继续学习
+            loadProgress();
         });
 
         onUnmounted(() => {
@@ -489,6 +647,9 @@ const app = createApp({
             themeToUpdate,
             currentCard,
             customTheme,
+            hasProgress,
+            viewedCards,
+            lastStudyTimestamp,
             loadTheme,
             loadAllThemes,
             loadCustomTheme,
@@ -497,6 +658,10 @@ const app = createApp({
             prevCard,
             nextCard,
             resetCards,
+            resetProgress,
+            continueLastStudy,
+            getThemeProgress,
+            formatLastStudyTime,
             deleteCurrentCard,
             deleteTheme,
             downloadTemplate,

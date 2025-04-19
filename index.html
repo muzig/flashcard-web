@@ -31,6 +31,17 @@
             <!-- 主题管理按钮 -->
             <div class="theme-management" v-if="!flashcards.length && !selectedTheme">
                 <button class="action-btn" @click="showNewThemeForm">上传新主题</button>
+                <button v-if="hasProgress" class="continue-btn" @click="continueLastStudy">
+                    <span class="btn-icon">⏵</span> 继续学习
+                </button>
+                <button v-if="hasProgress" class="reset-btn" @click="resetProgress">
+                    <span class="btn-icon">↻</span> 重置进度
+                </button>
+            </div>
+
+            <!-- 上次学习信息 -->
+            <div class="last-study-info" v-if="hasProgress && !flashcards.length && !selectedTheme">
+                <p>上次学习时间: {{ formatLastStudyTime() }}</p>
             </div>
 
             <!-- 自定义主题选项 -->
@@ -61,6 +72,11 @@
                             <div class="theme-content">
                                 <h3>{{ theme.name }}</h3>
                                 <p>{{ theme.description }}</p>
+                                <!-- 学习进度指示器 -->
+                                <div v-if="viewedCards[theme.id]" class="progress-indicator">
+                                    <div class="progress-bar" :style="{ width: getThemeProgress(theme.id).percentage + '%', backgroundColor: theme.color }"></div>
+                                    <span class="progress-text">{{ getThemeProgress(theme.id).completed }}/{{ getThemeProgress(theme.id).total }} 已学习</span>
+                                </div>
                             </div>
                         </div>
                         <div class="theme-actions" @click.stop>
@@ -150,6 +166,19 @@
                         {{ currentThemeData.icon.charAt(0).toUpperCase() }}
                     </div>
                     <h2>{{ currentThemeData.name }}</h2>
+                </div>
+
+                <!-- 学习进度条 -->
+                <div class="theme-progress" v-if="selectedTheme && viewedCards[selectedTheme]">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"
+                             :style="{ width: getThemeProgress(selectedTheme).percentage + '%',
+                                      backgroundColor: currentThemeData ? currentThemeData.color : '#ff6b00' }">
+                        </div>
+                    </div>
+                    <div class="progress-stats">
+                        <span>{{ getThemeProgress(selectedTheme).completed }}/{{ getThemeProgress(selectedTheme).total }} 已学习 ({{ getThemeProgress(selectedTheme).percentage }}%)</span>
+                    </div>
                 </div>
 
                 <div class="controls">
