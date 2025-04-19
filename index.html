@@ -53,18 +53,23 @@
                         :key="theme.id"
                         class="theme-card"
                         :class="{ active: selectedTheme === theme.id }"
-                        :style="{ borderLeftColor: theme.color }"
-                        @click="loadTheme(theme.id)">
-                        <div class="theme-icon" :style="{ backgroundColor: theme.color }">
-                            {{ theme.icon.charAt(0).toUpperCase() }}
-                        </div>
-                        <div class="theme-content">
-                            <h3>{{ theme.name }}</h3>
-                            <p>{{ theme.description }}</p>
+                        :style="{ borderLeftColor: theme.color }">
+                        <div class="theme-card-content" @click="loadTheme(theme.id)">
+                            <div class="theme-icon" :style="{ backgroundColor: theme.color }">
+                                {{ theme.icon.charAt(0).toUpperCase() }}
+                            </div>
+                            <div class="theme-content">
+                                <h3>{{ theme.name }}</h3>
+                                <p>{{ theme.description }}</p>
+                            </div>
                         </div>
                         <div class="theme-actions" @click.stop>
-                            <button class="update-btn" @click="showUpdateThemeForm(theme)">更新</button>
-                            <button class="delete-theme-btn" @click="deleteTheme(theme)">删除</button>
+                            <button class="update-btn" @click="showUpdateThemeForm(theme)">
+                                <span class="btn-icon">↻</span> 更新
+                            </button>
+                            <button class="delete-theme-btn" @click="deleteTheme(theme)">
+                                <span class="btn-icon">✕</span> 删除
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -74,32 +79,68 @@
             <div class="file-upload" v-if="showThemeUploadForm">
                 <h2>上传新主题</h2>
                 <p>上传包含闪卡内容的TSV文件</p>
-                <input type="file" @change="handleNewThemeUpload" accept=".tsv,.txt" id="theme-upload">
-                <label for="theme-upload" class="upload-btn">选择文件</label>
-                <button class="cancel-btn" @click="showThemeUploadForm = false">取消</button>
+                <div class="file-upload-container">
+                    <div class="file-actions">
+                        <div class="upload-action">
+                            <input type="file" @change="handleNewThemeUpload" accept=".tsv,.txt" id="theme-upload">
+                            <label for="theme-upload" class="upload-btn">
+                                <span class="btn-icon">⬆️</span> 选择文件
+                            </label>
+                        </div>
+                        <div class="template-action">
+                            <button class="cancel-btn" @click="showThemeUploadForm = false">
+                                <span class="btn-icon">✕</span> 取消
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 更新主题表单 -->
             <div class="file-upload" v-if="showThemeUpdateForm && themeToUpdate">
                 <h2>更新主题: {{ themeToUpdate.name }}</h2>
                 <p>上传更新后的闪卡内容文件</p>
-                <input type="file" @change="handleThemeUpdate" accept=".tsv,.txt" id="theme-update">
-                <label for="theme-update" class="upload-btn">选择文件</label>
-                <button class="cancel-btn" @click="showThemeUpdateForm = false">取消</button>
+                <div class="file-upload-container">
+                    <div class="file-actions">
+                        <div class="upload-action">
+                            <input type="file" @change="handleThemeUpdate" accept=".tsv,.txt" id="theme-update">
+                            <label for="theme-update" class="upload-btn">
+                                <span class="btn-icon">⬆️</span> 选择文件
+                            </label>
+                        </div>
+                        <div class="template-action">
+                            <button class="cancel-btn" @click="showThemeUpdateForm = false">
+                                <span class="btn-icon">✕</span> 取消
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 文件上传 -->
             <div class="file-upload" v-if="!flashcards.length && selectedTheme === 'custom' && !showThemeUploadForm && !showThemeUpdateForm">
                 <h2>上传自定义TSV文件</h2>
                 <p>上传包含问题和答案的TSV文件，格式为：问题 [Tab] 答案</p>
-                <div class="file-actions">
-                    <div>
-                        <input type="file" @change="handleFileUpload" accept=".tsv,.txt" id="file-upload">
-                        <label for="file-upload" class="upload-btn">选择文件</label>
+                <div class="file-upload-container">
+                    <div class="file-actions">
+                        <div class="upload-action">
+                            <input type="file" @change="handleFileUpload" accept=".tsv,.txt" id="file-upload">
+                            <label for="file-upload" class="upload-btn">
+                                <span class="btn-icon">⬆️</span> 选择文件
+                            </label>
+                        </div>
+                        <div class="template-action">
+                            <button class="download-btn" @click="downloadTemplate">
+                                <span class="btn-icon">⬇️</span> 下载模板
+                            </button>
+                        </div>
                     </div>
-                    <button class="download-btn" @click="downloadTemplate">下载模板</button>
+                    <div class="return-action">
+                        <button class="cancel-btn" @click="resetCards">
+                            <span class="btn-icon">←</span> 返回主页
+                        </button>
+                    </div>
                 </div>
-                <button class="cancel-btn" style="margin-top: 15px;" @click="resetCards">返回主页</button>
             </div>
 
             <!-- 闪卡展示区域 -->
@@ -112,11 +153,15 @@
                 </div>
 
                 <div class="controls">
-                    <button @click="prevCard" :disabled="currentIndex === 0">上一张</button>
-                    <span class="card-count">{{ currentIndex + 1 }} / {{ flashcards.length }}</span>
-                    <button @click="nextCard" :disabled="currentIndex >= flashcards.length - 1">下一张</button>
-                    <button @click="deleteCurrentCard" class="delete-btn">删除当前闪卡</button>
-                    <button @click="resetCards" class="danger-btn">返回主题选择</button>
+                    <div class="navigation-controls">
+                        <button @click="prevCard" :disabled="currentIndex === 0">上一张</button>
+                        <span class="card-count">{{ currentIndex + 1 }} / {{ flashcards.length }}</span>
+                        <button @click="nextCard" :disabled="currentIndex >= flashcards.length - 1">下一张</button>
+                    </div>
+                    <div class="action-controls">
+                        <button @click="deleteCurrentCard" class="delete-btn">删除当前闪卡</button>
+                        <button @click="resetCards" class="danger-btn">返回主题选择</button>
+                    </div>
                 </div>
 
                 <div class="flashcard-container">
