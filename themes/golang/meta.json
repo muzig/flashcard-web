@@ -1,0 +1,8 @@
+{
+    "id": "golang",
+    "name": "Golang 面试",
+    "description": "学习 Golang 的核心概念、并发编程、内存管理和常见面试问题。",
+    "icon": "golang",
+    "color": "#00ADD8",
+    "cards": "cards.tsv"
+}

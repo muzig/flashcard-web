@@ -11,6 +11,10 @@
     {
       "id": "vue",
       "path": "vue/meta.json"
+    },
+    {
+      "id": "golang",
+      "path": "golang/meta.json"
     }
   ]
 }
