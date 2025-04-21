@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <header>
-      <h1>闪卡学习应用</h1>
+      <h1 class="header-title" @click="goToHome">闪卡学习应用</h1>
     </header>
 
     <!-- Loading state -->
@@ -160,7 +160,6 @@
             <!-- No cards message -->
             <div v-else-if="!isLoading" class="no-cards-message">
               <p>没有找到闪卡数据。</p>
-              <button @click="goToHome" class="return-btn">返回主题选择</button>
             </div>
           </div>
 
@@ -216,10 +215,6 @@
               <button @click="resetCards" class="action-btn">
                 <span class="btn-icon">↻</span>
                 <span>重置学习</span>
-              </button>
-              <button @click="goToHome" class="action-btn">
-                <span class="btn-icon">←</span>
-                <span>返回主题选择</span>
               </button>
               <button class="delete-btn action-btn" @click="deleteCurrentCard">
                 <span class="btn-icon">🗑️</span>
@@ -739,21 +734,6 @@ watch(currentIndex, () => {
   margin-bottom: 20px;
 }
 
-.return-btn {
-  padding: 10px 20px;
-  background-color: #ff6b00;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s;
-}
-
-.return-btn:hover {
-  background-color: #e05e00;
-}
-
 /* Navigation controls style */
 .navigation-controls {
   display: flex;
@@ -1261,5 +1241,31 @@ watch(currentIndex, () => {
   background-color: #ccc;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Add header title styles */
+.header-title {
+  cursor: pointer;
+  transition: color 0.3s;
+  display: inline-block;
+  position: relative;
+}
+
+.header-title:hover {
+  color: var(--theme-color, #ff6b00);
+}
+
+.header-title::after {
+  content: '←';
+  position: absolute;
+  left: -25px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.header-title:hover::after {
+  opacity: 1;
 }
 </style>
