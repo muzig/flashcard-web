@@ -7,6 +7,8 @@ export const useFlashcardStore = defineStore('flashcard', () => {
   const currentIndex = ref(0)
   const isFlipped = ref(false)
   const selectedCategory = ref('')
+  const cardStatus = ref({}) // Track status of each card: 'mastered', 'review', or undefined
+  const reviewSchedule = ref({}) // Track review schedule for each card
 
   // Getters
   const currentCard = computed(() => {
@@ -14,6 +16,29 @@ export const useFlashcardStore = defineStore('flashcard', () => {
       return { question: '', answer: '' }
     }
     return filteredFlashcards.value[currentIndex.value] || filteredFlashcards.value[0]
+  })
+
+  const currentCardStatus = computed(() => {
+    const card = currentCard.value
+    if (!card) return null
+    const cardKey = `${card.question}-${card.answer}`
+    return cardStatus.value[cardKey]
+  })
+
+  const currentCardReviewTime = computed(() => {
+    const card = currentCard.value
+    if (!card) return null
+    const cardKey = `${card.question}-${card.answer}`
+    return reviewSchedule.value[cardKey]
+  })
+
+  const isCardDueForReview = computed(() => {
+    const card = currentCard.value
+    if (!card) return false
+    const cardKey = `${card.question}-${card.answer}`
+    const reviewTime = reviewSchedule.value[cardKey]
+    if (!reviewTime) return false
+    return new Date() >= new Date(reviewTime)
   })
 
   const categories = computed(() => {
@@ -160,6 +185,109 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     isFlipped.value = false
   }
 
+  function markCardForReview() {
+    const card = currentCard.value
+    if (!card) return
+
+    const cardKey = `${card.question}-${card.answer}`
+    cardStatus.value[cardKey] = 'review'
+    
+    // Set review schedule based on Ebbinghaus forgetting curve
+    const now = new Date()
+    const reviewTimes = [
+      new Date(now.getTime() + 20 * 60 * 1000), // 20 minutes
+      new Date(now.getTime() + 60 * 60 * 1000), // 1 hour
+      new Date(now.getTime() + 9 * 60 * 60 * 1000), // 9 hours
+      new Date(now.getTime() + 24 * 60 * 60 * 1000), // 1 day
+      new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000), // 2 days
+      new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000), // 6 days
+      new Date(now.getTime() + 31 * 24 * 60 * 60 * 1000) // 31 days
+    ]
+    
+    // If this is the first time marking for review, start with the first interval
+    if (!reviewSchedule.value[cardKey]) {
+      reviewSchedule.value[cardKey] = reviewTimes[0].toISOString()
+    } else {
+      // Find the next review time
+      const currentReviewTime = new Date(reviewSchedule.value[cardKey])
+      const nextIndex = reviewTimes.findIndex(time => time > currentReviewTime)
+      if (nextIndex !== -1) {
+        reviewSchedule.value[cardKey] = reviewTimes[nextIndex].toISOString()
+      } else {
+        // If all review times have passed, mark as mastered
+        cardStatus.value[cardKey] = 'mastered'
+        delete reviewSchedule.value[cardKey]
+      }
+    }
+    
+    saveCardStatus()
+    saveReviewSchedule()
+  }
+
+  function markCardAsMastered() {
+    const card = currentCard.value
+    if (!card) return
+
+    const cardKey = `${card.question}-${card.answer}`
+    cardStatus.value[cardKey] = 'mastered'
+    delete reviewSchedule.value[cardKey]
+    saveCardStatus()
+    saveReviewSchedule()
+  }
+
+  function resetCardStatus() {
+    const card = currentCard.value
+    if (!card) return
+
+    const cardKey = `${card.question}-${card.answer}`
+    delete cardStatus.value[cardKey]
+    delete reviewSchedule.value[cardKey]
+    saveCardStatus()
+    saveReviewSchedule()
+  }
+
+  function saveCardStatus() {
+    try {
+      localStorage.setItem('cardStatus', JSON.stringify(cardStatus.value))
+    } catch (error) {
+      console.error('Failed to save card status:', error)
+    }
+  }
+
+  function saveReviewSchedule() {
+    try {
+      localStorage.setItem('reviewSchedule', JSON.stringify(reviewSchedule.value))
+    } catch (error) {
+      console.error('Failed to save review schedule:', error)
+    }
+  }
+
+  function loadCardStatus() {
+    try {
+      const savedStatus = localStorage.getItem('cardStatus')
+      if (savedStatus) {
+        cardStatus.value = JSON.parse(savedStatus)
+      }
+    } catch (error) {
+      console.error('Failed to load card status:', error)
+    }
+  }
+
+  function loadReviewSchedule() {
+    try {
+      const savedSchedule = localStorage.getItem('reviewSchedule')
+      if (savedSchedule) {
+        reviewSchedule.value = JSON.parse(savedSchedule)
+      }
+    } catch (error) {
+      console.error('Failed to load review schedule:', error)
+    }
+  }
+
+  // Load data when store is initialized
+  loadCardStatus()
+  loadReviewSchedule()
+
   return {
     flashcards,
     currentIndex,
@@ -168,6 +296,9 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     categories,
     selectedCategory,
     filteredFlashcards,
+    currentCardStatus,
+    currentCardReviewTime,
+    isCardDueForReview,
     parseAndLoadCards,
     flipCard,
     prevCard,
@@ -175,6 +306,9 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     resetCards,
     deleteCurrentCard,
     setCurrentIndex,
-    setCategory
+    setCategory,
+    markCardForReview,
+    markCardAsMastered,
+    resetCardStatus
   }
 })

@@ -105,6 +105,46 @@
               <div class="flashcard-content" v-html="currentCard.answer"></div>
             </div>
           </div>
+          
+          <!-- Review status -->
+          <div v-if="currentCardStatus === 'review'" class="review-status">
+            <div v-if="isCardDueForReview" class="review-due">
+              <span class="review-icon">⏰</span>
+              <span>需要复习</span>
+            </div>
+            <div v-else class="next-review">
+              <span class="review-icon">📅</span>
+              <span>下次复习: {{ formatReviewTime }}</span>
+            </div>
+          </div>
+          
+          <!-- Card status controls -->
+          <div class="card-status-controls">
+            <button 
+              class="status-btn mastered-btn" 
+              :class="{ active: currentCardStatus === 'mastered' }"
+              @click="markCardAsMastered"
+              title="标记为已掌握"
+            >
+              <span class="btn-icon">✓</span>
+            </button>
+            <button 
+              class="status-btn review-btn" 
+              :class="{ active: currentCardStatus === 'review' }"
+              @click="markCardForReview"
+              title="标记为需要复习"
+            >
+              <span class="btn-icon">↻</span>
+            </button>
+            <button 
+              class="status-btn reset-btn" 
+              v-if="currentCardStatus"
+              @click="resetCardStatus"
+              title="重置状态"
+            >
+              <span class="btn-icon">↺</span>
+            </button>
+          </div>
         </div>
 
         <!-- No cards message -->
@@ -139,6 +179,9 @@ const flashcards = computed(() => flashcardStore.flashcards)
 const currentIndex = computed(() => flashcardStore.currentIndex)
 const isFlipped = computed(() => flashcardStore.isFlipped)
 const currentCard = computed(() => flashcardStore.currentCard)
+const currentCardStatus = computed(() => flashcardStore.currentCardStatus)
+const currentCardReviewTime = computed(() => flashcardStore.currentCardReviewTime)
+const isCardDueForReview = computed(() => flashcardStore.isCardDueForReview)
 
 const viewedCardsCount = computed(() => {
   const themeViewed = progressStore.viewedCards[themeId.value]
@@ -166,6 +209,24 @@ const themeProgress = computed(() => {
 const categories = computed(() => flashcardStore.categories)
 const selectedCategory = computed(() => flashcardStore.selectedCategory)
 const filteredFlashcards = computed(() => flashcardStore.filteredFlashcards)
+
+const formatReviewTime = computed(() => {
+  if (!currentCardReviewTime.value) return ''
+  
+  const reviewTime = new Date(currentCardReviewTime.value)
+  const now = new Date()
+  const diff = reviewTime - now
+  
+  if (diff < 0) return '现在'
+  
+  const minutes = Math.floor(diff / (1000 * 60))
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+  
+  if (days > 0) return `${days}天后`
+  if (hours > 0) return `${hours}小时后`
+  return `${minutes}分钟后`
+})
 
 // Methods
 function flipCard() {
@@ -231,6 +292,18 @@ function goToHome() {
 
 function setCategory(category) {
   flashcardStore.setCategory(category)
+}
+
+function markCardForReview() {
+  flashcardStore.markCardForReview()
+}
+
+function markCardAsMastered() {
+  flashcardStore.markCardAsMastered()
+}
+
+function resetCardStatus() {
+  flashcardStore.resetCardStatus()
 }
 
 // Keyboard event handler
@@ -716,5 +789,80 @@ watch(currentIndex, () => {
   .flashcard-back .flashcard-content {
     font-size: 0.95rem;
   }
+}
+
+.card-status-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.status-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background-color: #f0f0f0;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  font-size: 1.2rem;
+}
+
+.status-btn:hover {
+  transform: scale(1.1);
+}
+
+.status-btn.active {
+  color: white;
+}
+
+.mastered-btn.active {
+  background-color: #4CAF50;
+}
+
+.review-btn.active {
+  background-color: #FF9800;
+}
+
+.reset-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.reset-btn:hover {
+  background-color: #d32f2f;
+}
+
+.btn-icon {
+  font-size: 1.2rem;
+}
+
+.review-status {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.review-due {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.next-review {
+  color: #2196F3;
+}
+
+.review-icon {
+  margin-right: 5px;
+  font-size: 1.1rem;
 }
 </style>
