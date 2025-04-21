@@ -229,7 +229,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useThemeStore } from '../stores/theme'
 import { useFlashcardStore } from '../stores/flashcard'
@@ -255,24 +255,23 @@ const currentCardReviewTime = computed(() => flashcardStore.currentCardReviewTim
 const isCardDueForReview = computed(() => flashcardStore.isCardDueForReview)
 
 const viewedCardsCount = computed(() => {
-  const themeViewed = progressStore.viewedCards[themeId.value]
-  if (!themeViewed) return 0
+  // Get all cards in current view
+  const currentCards = selectedCategory.value
+    ? filteredFlashcards.value
+    : flashcards.value
 
-  // Count only viewed cards in the current category
-  if (selectedCategory.value) {
-    return filteredFlashcards.value.filter(card => {
-      const cardIndex = flashcards.value.findIndex(f => 
-        f.question === card.question && f.answer === card.answer
-      )
-      return themeViewed[cardIndex]
-    }).length
-  }
-
-  return Object.keys(themeViewed).length
+  // Count mastered cards
+  return currentCards.filter(card => 
+    flashcardStore.getCardStatus(card) === 'mastered'
+  ).length
 })
 
 const themeProgress = computed(() => {
-  const totalCards = filteredFlashcards.value.length
+  // Get total cards count based on current view
+  const totalCards = selectedCategory.value
+    ? filteredFlashcards.value.length
+    : flashcards.value.length
+
   if (totalCards === 0) return 0
   return Math.round((viewedCardsCount.value / totalCards) * 100)
 })
@@ -360,7 +359,7 @@ function goToHome() {
   themeStore.currentThemeData = null
   flashcardStore.resetCards()
   
-  // Navigate to home
+  // Navigate to home using push to preserve history
   router.push({ name: 'home' })
 }
 
@@ -373,7 +372,16 @@ function markCardForReview() {
 }
 
 function markCardAsMastered() {
+  // Use the store's method to mark card as mastered
   flashcardStore.markCardAsMastered()
+  
+  // Force a progress update
+  progressStore.saveProgress(themeId.value, currentIndex.value)
+  
+  // Force a reactive update
+  nextTick(() => {
+    // This will trigger a recomputation of viewedCardsCount and themeProgress
+  })
 }
 
 function resetCardStatus() {
@@ -410,6 +418,24 @@ function handleKeyDown(e) {
 // Lifecycle hooks
 onMounted(async () => {
   document.addEventListener('keydown', handleKeyDown)
+
+  // Add beforeRouteLeave guard
+  const beforeRouteLeave = (to, from, next) => {
+    // Reset theme state when leaving
+    themeStore.selectedTheme = ''
+    themeStore.currentThemeData = null
+    flashcardStore.resetCards()
+    next()
+  }
+
+  // Add the guard
+  router.beforeEach((to, from, next) => {
+    if (from.name === 'theme' && to.name === 'home') {
+      beforeRouteLeave(to, from, next)
+    } else {
+      next()
+    }
+  })
 
   try {
     console.log('Loading theme with ID:', themeId.value)

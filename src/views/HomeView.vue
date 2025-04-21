@@ -51,8 +51,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useThemeStore } from '../stores/theme'
 import { useProgressStore } from '../stores/progress'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
@@ -61,6 +61,7 @@ import ThemeUploadForm from '../components/ThemeUploadForm.vue'
 import ThemeUpdateForm from '../components/ThemeUpdateForm.vue'
 
 const router = useRouter()
+const route = useRoute()
 const themeStore = useThemeStore()
 const progressStore = useProgressStore()
 
@@ -173,97 +174,138 @@ onMounted(async () => {
     alert('加载主题列表失败，请刷新页面重试。')
   }
 })
+
+// Watch for route changes to reload themes
+watch(() => route.name, async (newRouteName) => {
+  if (newRouteName === 'home') {
+    try {
+      await themeStore.loadAllThemes()
+      progressStore.loadProgress()
+    } catch (error) {
+      console.error('Failed to reload themes:', error)
+    }
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>
 /* Component-specific styles */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+/* Theme management styles */
 .theme-management {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   gap: 15px;
   flex-wrap: wrap;
 }
 
 .action-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   background-color: #4CAF50;
   color: white;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s;
-}
-
-.action-btn:hover {
-  background-color: #3e8e41;
-}
-
-.continue-btn {
-  padding: 10px 20px;
-  background-color: #2196F3;
-  color: white;
-  border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
   transition: all 0.3s;
   display: flex;
   align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:hover {
+  background-color: #3e8e41;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.continue-btn {
+  padding: 12px 24px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .continue-btn:hover {
   background-color: #0b7dda;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .reset-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   background-color: #9e9e9e;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
   transition: all 0.3s;
   display: flex;
   align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .reset-btn:hover {
   background-color: #757575;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .btn-icon {
-  margin-right: 5px;
+  margin-right: 8px;
   font-size: 1.1rem;
 }
 
+/* Last study info styles */
 .last-study-info {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   color: #666;
   font-style: italic;
+  font-size: 1.1rem;
 }
 
+/* Custom theme card styles */
 .custom-theme-card {
   max-width: 800px;
-  margin: 0 auto 30px;
+  margin: 0 auto 40px;
   background-color: #f9f0ff;
   border-radius: 15px;
-  padding: 25px;
+  padding: 30px;
   box-shadow: 0 6px 12px rgba(142, 68, 173, 0.2);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: all 0.3s;
   cursor: pointer;
+  border: 2px dashed #8e44ad;
   border-left: 8px solid #8e44ad;
   display: flex;
   align-items: center;
   position: relative;
   overflow: hidden;
-  border: 2px dashed #8e44ad;
-  border-left: 8px solid #8e44ad;
 }
 
 .custom-theme-card:hover {
@@ -287,8 +329,8 @@ onMounted(async () => {
 }
 
 .custom-theme-icon {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   background-color: #8e44ad;
   color: white;
@@ -296,8 +338,8 @@ onMounted(async () => {
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  font-size: 2rem;
-  margin-right: 25px;
+  font-size: 2.5rem;
+  margin-right: 30px;
   flex-shrink: 0;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   animation: pulse 2s infinite;
@@ -307,11 +349,9 @@ onMounted(async () => {
   0% {
     transform: scale(1);
   }
-
   50% {
     transform: scale(1.05);
   }
-
   100% {
     transform: scale(1);
   }
@@ -323,44 +363,121 @@ onMounted(async () => {
 
 .custom-theme-content h3 {
   color: #333;
-  margin-bottom: 10px;
-  font-size: 1.8rem;
+  margin-bottom: 15px;
+  font-size: 2rem;
 }
 
 .custom-theme-content p {
   color: #666;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  line-height: 1.5;
 }
 
+/* Theme selector styles */
 .theme-selector {
-  margin-bottom: 40px;
+  margin-bottom: 50px;
+}
+
+.theme-selector h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2rem;
+  color: #333;
 }
 
 .theme-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  padding: 0 20px;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 900px;
+  }
+  
+  .theme-cards {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  
+  header h1 {
+    font-size: 2rem;
+  }
+  
   .theme-management {
     flex-direction: column;
     align-items: center;
     gap: 10px;
   }
-
+  
   .action-btn,
   .continue-btn,
   .reset-btn {
     width: 100%;
-    max-width: 250px;
+    max-width: 300px;
     justify-content: center;
   }
+  
+  .custom-theme-card {
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .custom-theme-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+    margin-right: 20px;
+  }
+  
+  .custom-theme-content h3 {
+    font-size: 1.6rem;
+  }
+  
+  .custom-theme-content p {
+    font-size: 1rem;
+  }
+  
+  .theme-selector h2 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+  
+  .theme-cards {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+}
 
-  .last-study-info {
-    font-size: 0.9rem;
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .custom-theme-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .custom-theme-icon {
+    margin-right: 0;
     margin-bottom: 15px;
+  }
+  
+  .custom-theme-content h3 {
+    font-size: 1.4rem;
+  }
+  
+  .custom-theme-content p {
+    font-size: 0.9rem;
   }
 }
 </style>

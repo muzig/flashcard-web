@@ -66,10 +66,12 @@ export const useFlashcardStore = defineStore('flashcard', () => {
       filtered = filtered.filter(card => {
         const cardKey = `${card.question}-${card.answer}`
         const status = cardStatus.value[cardKey]
+        const reviewTime = reviewSchedule.value[cardKey]
         
         switch (filterMode.value) {
           case 'review':
-            return status === 'review' && isCardDueForReview.value
+            // 只有当卡片状态为review且有复习时间时才显示
+            return status === 'review' && reviewTime
           case 'mastered':
             return status === 'mastered'
           case 'new':
@@ -263,7 +265,10 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     if (!card) return
 
     const cardKey = `${card.question}-${card.answer}`
-    cardStatus.value[cardKey] = 'mastered'
+    cardStatus.value = {
+      ...cardStatus.value,
+      [cardKey]: 'mastered'
+    }
     delete reviewSchedule.value[cardKey]
     saveCardStatus()
     saveReviewSchedule()
@@ -330,6 +335,11 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     isFlipped.value = false
   }
 
+  function getCardStatus(card) {
+    const cardKey = `${card.question}-${card.answer}`
+    return cardStatus.value[cardKey]
+  }
+
   // Load data when store is initialized
   loadCardStatus()
   loadReviewSchedule()
@@ -359,6 +369,7 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     markCardAsMastered,
     resetCardStatus,
     setFilterMode,
-    setSearchQuery
+    setSearchQuery,
+    getCardStatus
   }
 })
