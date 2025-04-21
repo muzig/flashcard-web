@@ -28,7 +28,9 @@ export const useFlashcardStore = defineStore('flashcard', () => {
 
         const [question, answer] = line.split('\t')
         if (question && answer) {
-          cards.push({ question, answer })
+          // 处理答案文本，添加格式化
+          const formattedAnswer = formatAnswerText(answer)
+          cards.push({ question, answer: formattedAnswer })
         }
       }
 
@@ -45,6 +47,32 @@ export const useFlashcardStore = defineStore('flashcard', () => {
       console.error('Failed to parse file:', error)
       throw error
     }
+  }
+
+  // 格式化答案文本
+  function formatAnswerText(text) {
+    // 处理数字列表
+    text = text.replace(/(\d+\.\s)/g, '<br>$1')
+    
+    // 处理破折号列表
+    text = text.replace(/([-–—])\s/g, '<br>$1 ')
+    
+    // 处理冒号后的内容
+    text = text.replace(/：/g, '：<br>')
+    
+    // 处理括号内容
+    text = text.replace(/（([^）]+)）/g, '<br>（$1）')
+    
+    // 处理代码块
+    text = text.replace(/`([^`]+)`/g, '<code>$1</code>')
+    
+    // 处理强调文本
+    text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    
+    // 处理分隔线
+    text = text.replace(/---/g, '<hr>')
+    
+    return text
   }
 
   function flipCard() {

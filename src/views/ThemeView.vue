@@ -63,7 +63,7 @@
           <div class="flashcard-content">{{ currentCard.question }}</div>
         </div>
         <div class="flashcard-back">
-          <div class="flashcard-content">{{ currentCard.answer }}</div>
+          <div class="flashcard-content" v-html="currentCard.answer"></div>
         </div>
       </div>
     </div>
@@ -244,6 +244,123 @@ watch(currentIndex, () => {
 </script>
 
 <style scoped>
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.flashcard-container {
+  perspective: 1000px;
+  margin: 40px auto;
+  width: 100%;
+  max-width: 600px;
+}
+
+.flashcard {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+  cursor: pointer;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.flashcard.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front,
+.flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  border-radius: 15px;
+  background-color: white;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+  background-color: var(--theme-color, #f5f5f5);
+  color: white;
+}
+
+.flashcard-content {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  text-align: center;
+  width: 100%;
+  white-space: pre-wrap;
+}
+
+/* 答案文本样式优化 */
+.flashcard-back .flashcard-content {
+  text-align: left;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+/* 列表项样式 */
+.flashcard-back .flashcard-content ul,
+.flashcard-back .flashcard-content ol {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.flashcard-back .flashcard-content li {
+  margin-bottom: 8px;
+}
+
+/* 强调文本样式 */
+.flashcard-back .flashcard-content strong {
+  color: #fff;
+  font-weight: bold;
+}
+
+/* 代码块样式 */
+.flashcard-back .flashcard-content code {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+/* 分隔线样式 */
+.flashcard-back .flashcard-content hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  margin: 15px 0;
+}
+
+/* 问题文本样式 */
+.flashcard-front .flashcard-content {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: #333;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .flashcard {
+    height: 300px;
+  }
+
+  .flashcard-content {
+    font-size: 1rem;
+  }
+
+  .flashcard-back .flashcard-content {
+    font-size: 0.95rem;
+  }
+}
+
 /* Current theme styles */
 .current-theme {
   display: flex;
@@ -384,85 +501,6 @@ watch(currentIndex, () => {
   color: #333;
 }
 
-/* Flashcard styles */
-.flashcard-container {
-  display: flex;
-  justify-content: center;
-  perspective: 1000px;
-  min-height: 300px;
-  margin-bottom: 50px;
-}
-
-.flashcard {
-  width: 100%;
-  max-width: 600px;
-  height: 300px;
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.6s, box-shadow 0.3s;
-  cursor: pointer;
-  animation: float 6s ease-in-out infinite;
-  --theme-color: #ff6b00;
-}
-
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-.flashcard.flipped {
-  transform: rotateY(180deg);
-  animation: none;
-}
-
-.flashcard-front,
-.flashcard-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: white;
-  overflow: auto;
-  transition: box-shadow 0.3s;
-}
-
-.flashcard:hover .flashcard-front,
-.flashcard:hover .flashcard-back {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-}
-
-.flashcard-front {
-  border-left: 5px solid var(--theme-color);
-}
-
-.flashcard-back {
-  transform: rotateY(180deg);
-  border-left: 5px solid var(--theme-color);
-  opacity: 0.9;
-}
-
-.flashcard-content {
-  text-align: center;
-  font-size: 1.5rem;
-  line-height: 1.5;
-}
-
 .no-cards-message {
   text-align: center;
   margin: 50px 0;
@@ -487,62 +525,5 @@ watch(currentIndex, () => {
 
 .return-btn:hover {
   background-color: #e05e00;
-}
-
-@media (max-width: 768px) {
-  .flashcard {
-    max-width: 90%;
-    height: 250px;
-  }
-
-  .keyboard-shortcuts {
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
-  .shortcut-key {
-    padding: 3px 8px;
-    font-size: 0.8rem;
-  }
-
-  .shortcut-desc {
-    font-size: 0.8rem;
-  }
-
-  .controls {
-    gap: 15px;
-  }
-
-  .navigation-controls,
-  .action-controls {
-    gap: 8px;
-    width: 100%;
-  }
-
-  .controls button {
-    padding: 8px 12px;
-    font-size: 0.9rem;
-    flex: 1;
-    min-width: 80px;
-    max-width: 150px;
-  }
-
-  .card-count {
-    min-width: 60px;
-    text-align: center;
-  }
-
-  .flashcard-content {
-    font-size: 1.2rem;
-  }
-
-  .theme-progress {
-    max-width: 100%;
-    padding: 0 10px;
-  }
-
-  .progress-stats {
-    font-size: 0.8rem;
-  }
 }
 </style>

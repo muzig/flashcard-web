@@ -15,6 +15,10 @@
     {
       "id": "golang",
       "path": "golang/meta.json"
+    },
+    {
+      "id": "mysql",
+      "path": "mysql/meta.json"
     }
   ]
 }
