@@ -64,93 +64,120 @@
           </div>
         </div>
 
-        <!-- Keyboard shortcuts -->
-        <div v-if="filteredFlashcards.length > 0" class="keyboard-shortcuts">
-          <div class="shortcut-item">
-            <span class="shortcut-key">←</span>
-            <span class="shortcut-desc">上一张</span>
-          </div>
-          <div class="shortcut-item">
-            <span class="shortcut-key">→</span>
-            <span class="shortcut-desc">下一张</span>
-          </div>
-          <div class="shortcut-item">
-            <span class="shortcut-key">空格</span>
-            <span class="shortcut-desc">翻转卡片</span>
-          </div>
-        </div>
+        <!-- Main content area -->
+        <div class="main-content-wrapper">
+          <!-- Flashcard area -->
+          <div class="flashcard-area">
+            <!-- Keyboard shortcuts -->
+            <div v-if="filteredFlashcards.length > 0" class="keyboard-shortcuts">
+              <div class="shortcut-item">
+                <span class="shortcut-key">←</span>
+                <span class="shortcut-desc">上一张</span>
+              </div>
+              <div class="shortcut-item">
+                <span class="shortcut-key">→</span>
+                <span class="shortcut-desc">下一张</span>
+              </div>
+              <div class="shortcut-item">
+                <span class="shortcut-key">空格</span>
+                <span class="shortcut-desc">翻转卡片</span>
+              </div>
+            </div>
 
-        <!-- Controls -->
-        <div v-if="filteredFlashcards.length > 0" class="controls">
-          <div class="navigation-controls">
-            <button @click="prevCard" :disabled="currentIndex <= 0">上一张</button>
-            <span class="card-count">{{ currentIndex + 1 }} / {{ filteredFlashcards.length }}</span>
-            <button @click="nextCard" :disabled="currentIndex >= filteredFlashcards.length - 1">下一张</button>
-          </div>
-          <div class="action-controls">
-            <button @click="resetCards">重置</button>
-            <button @click="goToHome">返回主题选择</button>
-            <button class="delete-btn" @click="deleteCurrentCard">删除卡片</button>
-          </div>
-        </div>
+            <!-- Flashcard -->
+            <div v-if="filteredFlashcards.length > 0" class="flashcard-container">
+              <div class="flashcard" :class="{ flipped: isFlipped }" @click="flipCard"
+                :style="currentThemeData ? { '--theme-color': currentThemeData.color } : {}">
+                <div class="flashcard-front">
+                  <div class="flashcard-content">{{ currentCard.question }}</div>
+                </div>
+                <div class="flashcard-back">
+                  <div class="flashcard-content" v-html="currentCard.answer"></div>
+                </div>
+              </div>
+            </div>
 
-        <!-- Flashcard -->
-        <div v-if="filteredFlashcards.length > 0" class="flashcard-container">
-          <div class="flashcard" :class="{ flipped: isFlipped }" @click="flipCard"
-            :style="currentThemeData ? { '--theme-color': currentThemeData.color } : {}">
-            <div class="flashcard-front">
-              <div class="flashcard-content">{{ currentCard.question }}</div>
+            <!-- Navigation controls -->
+            <div v-if="filteredFlashcards.length > 0" class="navigation-controls">
+              <button @click="prevCard" :disabled="currentIndex <= 0" class="nav-btn prev-btn">
+                <span class="btn-icon">←</span>
+              </button>
+              <span class="card-count">{{ currentIndex + 1 }} / {{ filteredFlashcards.length }}</span>
+              <button @click="nextCard" :disabled="currentIndex >= filteredFlashcards.length - 1" class="nav-btn next-btn">
+                <span class="btn-icon">→</span>
+              </button>
             </div>
-            <div class="flashcard-back">
-              <div class="flashcard-content" v-html="currentCard.answer"></div>
-            </div>
-          </div>
-          
-          <!-- Review status -->
-          <div v-if="currentCardStatus === 'review'" class="review-status">
-            <div v-if="isCardDueForReview" class="review-due">
-              <span class="review-icon">⏰</span>
-              <span>需要复习</span>
-            </div>
-            <div v-else class="next-review">
-              <span class="review-icon">📅</span>
-              <span>下次复习: {{ formatReviewTime }}</span>
-            </div>
-          </div>
-          
-          <!-- Card status controls -->
-          <div class="card-status-controls">
-            <button 
-              class="status-btn mastered-btn" 
-              :class="{ active: currentCardStatus === 'mastered' }"
-              @click="markCardAsMastered"
-              title="标记为已掌握"
-            >
-              <span class="btn-icon">✓</span>
-            </button>
-            <button 
-              class="status-btn review-btn" 
-              :class="{ active: currentCardStatus === 'review' }"
-              @click="markCardForReview"
-              title="标记为需要复习"
-            >
-              <span class="btn-icon">↻</span>
-            </button>
-            <button 
-              class="status-btn reset-btn" 
-              v-if="currentCardStatus"
-              @click="resetCardStatus"
-              title="重置状态"
-            >
-              <span class="btn-icon">↺</span>
-            </button>
-          </div>
-        </div>
 
-        <!-- No cards message -->
-        <div v-else-if="!isLoading" class="no-cards-message">
-          <p>没有找到闪卡数据。</p>
-          <button @click="goToHome" class="return-btn">返回主题选择</button>
+            <!-- No cards message -->
+            <div v-else-if="!isLoading" class="no-cards-message">
+              <p>没有找到闪卡数据。</p>
+              <button @click="goToHome" class="return-btn">返回主题选择</button>
+            </div>
+          </div>
+
+          <!-- Right sidebar -->
+          <div class="right-sidebar">
+            <!-- Review status -->
+            <div v-if="currentCardStatus === 'review'" class="review-status">
+              <div v-if="isCardDueForReview" class="review-due">
+                <span class="review-icon">⏰</span>
+                <span>需要复习</span>
+              </div>
+              <div v-else class="next-review">
+                <span class="review-icon">📅</span>
+                <span>下次复习: {{ formatReviewTime }}</span>
+              </div>
+            </div>
+
+            <!-- Card status controls -->
+            <div class="card-status-controls">
+              <div class="status-group">
+                <button 
+                  class="status-btn mastered-btn" 
+                  :class="{ active: currentCardStatus === 'mastered' }"
+                  @click="markCardAsMastered"
+                  title="标记为已掌握"
+                >
+                  <span class="btn-icon">✓</span>
+                  <span class="btn-label">已掌握</span>
+                </button>
+                <button 
+                  class="status-btn review-btn" 
+                  :class="{ active: currentCardStatus === 'review' }"
+                  @click="markCardForReview"
+                  title="标记为需要复习"
+                >
+                  <span class="btn-icon">↻</span>
+                  <span class="btn-label">需要复习</span>
+                </button>
+              </div>
+              <button 
+                class="status-btn reset-btn" 
+                v-if="currentCardStatus"
+                @click="resetCardStatus"
+                title="重置状态"
+              >
+                <span class="btn-icon">↺</span>
+                <span class="btn-label">重置状态</span>
+              </button>
+            </div>
+
+            <!-- Action controls -->
+            <div class="action-controls">
+              <button @click="resetCards" class="action-btn">
+                <span class="btn-icon">↻</span>
+                <span>重置学习</span>
+              </button>
+              <button @click="goToHome" class="action-btn">
+                <span class="btn-icon">←</span>
+                <span>返回主题选择</span>
+              </button>
+              <button class="delete-btn action-btn" @click="deleteCurrentCard">
+                <span class="btn-icon">🗑️</span>
+                <span>删除卡片</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -791,30 +818,53 @@ watch(currentIndex, () => {
   }
 }
 
+.right-sidebar {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
 .card-status-controls {
   display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
+  flex-direction: column;
+  gap: 12px;
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.status-group {
+  display: flex;
+  gap: 8px;
 }
 
 .status-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background-color: #f0f0f0;
-  color: #666;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
   transition: all 0.3s;
-  font-size: 1.2rem;
+  font-size: 0.9rem;
+  background-color: #f0f0f0;
+  color: #666;
+  flex: 1;
 }
 
 .status-btn:hover {
-  transform: scale(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .status-btn.active {
@@ -832,6 +882,7 @@ watch(currentIndex, () => {
 .reset-btn {
   background-color: #f44336;
   color: white;
+  width: 100%;
 }
 
 .reset-btn:hover {
@@ -840,16 +891,62 @@ watch(currentIndex, () => {
 
 .btn-icon {
   font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+.btn-label {
+  flex: 1;
+  text-align: left;
+}
+
+.action-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+  text-align: left;
+  width: 100%;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #e0e0e0;
+}
+
+.delete-btn {
+  background-color: #ffebee !important;
+  color: #f44336;
+}
+
+.delete-btn:hover {
+  background-color: #ffcdd2 !important;
 }
 
 .review-status {
-  margin-top: 15px;
-  padding: 10px;
+  padding: 15px;
   border-radius: 8px;
-  background-color: #f8f9fa;
+  background-color: white;
   text-align: center;
   font-size: 0.9rem;
-  color: #666;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .review-due {
@@ -864,5 +961,79 @@ watch(currentIndex, () => {
 .review-icon {
   margin-right: 5px;
   font-size: 1.1rem;
+}
+
+.main-content-wrapper {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.flashcard-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.navigation-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.nav-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--theme-color, #ff6b00);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  font-size: 1.5rem;
+}
+
+.nav-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  background-color: var(--theme-color-dark, #e05e00);
+}
+
+.nav-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.card-count {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-content-wrapper {
+    flex-direction: column;
+  }
+
+  .right-sidebar {
+    width: 100%;
+    position: static;
+  }
+
+  .status-group {
+    flex-direction: column;
+  }
+
+  .status-btn {
+    width: 100%;
+  }
 }
 </style>
