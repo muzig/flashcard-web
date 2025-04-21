@@ -389,13 +389,8 @@ function handleSearch() {
 }
 
 function handleCardClick() {
-  if (!isFlipped.value) {
-    // 如果卡片是正面，翻转它
-    flipCard()
-  } else {
-    // 如果卡片是背面，切换到下一张卡片
-    nextCard()
-  }
+  // 只翻转卡片，不自动切换到下一张
+  flipCard()
 }
 
 // Keyboard event handler
