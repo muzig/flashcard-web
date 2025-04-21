@@ -9,6 +9,8 @@ export const useFlashcardStore = defineStore('flashcard', () => {
   const selectedCategory = ref('')
   const cardStatus = ref({}) // Track status of each card: 'mastered', 'review', or undefined
   const reviewSchedule = ref({}) // Track review schedule for each card
+  const filterMode = ref('all') // 'all', 'review', 'mastered', 'new'
+  const searchQuery = ref('') // Search query for filtering cards
 
   // Getters
   const currentCard = computed(() => {
@@ -52,10 +54,42 @@ export const useFlashcardStore = defineStore('flashcard', () => {
   })
 
   const filteredFlashcards = computed(() => {
-    if (!selectedCategory.value) {
-      return flashcards.value
+    let filtered = flashcards.value
+
+    // Apply category filter
+    if (selectedCategory.value) {
+      filtered = filtered.filter(card => card.category === selectedCategory.value)
     }
-    return flashcards.value.filter(card => card.category === selectedCategory.value)
+
+    // Apply status filter
+    if (filterMode.value !== 'all') {
+      filtered = filtered.filter(card => {
+        const cardKey = `${card.question}-${card.answer}`
+        const status = cardStatus.value[cardKey]
+        
+        switch (filterMode.value) {
+          case 'review':
+            return status === 'review' && isCardDueForReview.value
+          case 'mastered':
+            return status === 'mastered'
+          case 'new':
+            return !status
+          default:
+            return true
+        }
+      })
+    }
+
+    // Apply search filter
+    if (searchQuery.value) {
+      const query = searchQuery.value.toLowerCase()
+      filtered = filtered.filter(card => 
+        card.question.toLowerCase().includes(query) || 
+        card.answer.toLowerCase().includes(query)
+      )
+    }
+
+    return filtered
   })
 
   // Actions
@@ -284,6 +318,18 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     }
   }
 
+  function setFilterMode(mode) {
+    filterMode.value = mode
+    currentIndex.value = 0
+    isFlipped.value = false
+  }
+
+  function setSearchQuery(query) {
+    searchQuery.value = query
+    currentIndex.value = 0
+    isFlipped.value = false
+  }
+
   // Load data when store is initialized
   loadCardStatus()
   loadReviewSchedule()
@@ -299,6 +345,8 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     currentCardStatus,
     currentCardReviewTime,
     isCardDueForReview,
+    filterMode,
+    searchQuery,
     parseAndLoadCards,
     flipCard,
     prevCard,
@@ -309,6 +357,8 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     setCategory,
     markCardForReview,
     markCardAsMastered,
-    resetCardStatus
+    resetCardStatus,
+    setFilterMode,
+    setSearchQuery
   }
 })

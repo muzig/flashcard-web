@@ -8,25 +8,76 @@
     <LoadingOverlay v-if="isLoading" />
 
     <div class="main-content">
-      <!-- Category filter -->
-      <div v-if="categories.length > 0" class="category-filter">
-        <div class="category-buttons">
-          <button 
-            class="category-btn" 
-            :class="{ active: !selectedCategory }"
-            @click="setCategory('')"
-          >
-            全部
-          </button>
-          <button 
-            v-for="category in categories" 
-            :key="category"
-            class="category-btn"
-            :class="{ active: selectedCategory === category }"
-            @click="setCategory(category)"
-          >
-            {{ category }}
-          </button>
+      <!-- Left sidebar with category and search filters -->
+      <div class="left-sidebar">
+        <!-- Category filter -->
+        <div v-if="categories.length > 0" class="category-section">
+          <h3>分类</h3>
+          <div class="category-buttons">
+            <button 
+              class="category-btn" 
+              :class="{ active: !selectedCategory }"
+              @click="setCategory('')"
+            >
+              全部
+            </button>
+            <button 
+              v-for="category in categories" 
+              :key="category"
+              class="category-btn"
+              :class="{ active: selectedCategory === category }"
+              @click="setCategory(category)"
+            >
+              {{ category }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Search and filter controls -->
+        <div class="search-filter-section">
+          <div class="search-box">
+            <input 
+              type="text" 
+              v-model="searchQuery" 
+              placeholder="搜索卡片..." 
+              @input="handleSearch"
+            />
+          </div>
+          
+          <div class="filter-group">
+            <button 
+              class="filter-btn" 
+              :class="{ active: filterMode === 'all' }"
+              @click="setFilterMode('all')"
+            >
+              <span class="btn-icon">📚</span>
+              <span class="btn-label">全部卡片</span>
+            </button>
+            <button 
+              class="filter-btn" 
+              :class="{ active: filterMode === 'review' }"
+              @click="setFilterMode('review')"
+            >
+              <span class="btn-icon">⏰</span>
+              <span class="btn-label">需要复习</span>
+            </button>
+            <button 
+              class="filter-btn" 
+              :class="{ active: filterMode === 'mastered' }"
+              @click="setFilterMode('mastered')"
+            >
+              <span class="btn-icon">✓</span>
+              <span class="btn-label">已掌握</span>
+            </button>
+            <button 
+              class="filter-btn" 
+              :class="{ active: filterMode === 'new' }"
+              @click="setFilterMode('new')"
+            >
+              <span class="btn-icon">✨</span>
+              <span class="btn-label">新卡片</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -54,9 +105,34 @@
 
           <!-- Theme progress -->
           <div class="theme-progress">
-            <div class="progress-info">
-              <span class="progress-percentage">{{ themeProgress }}%</span>
-              <span class="progress-label">已完成</span>
+            <div class="progress-header">
+              <div class="progress-info">
+                <span class="progress-percentage">{{ themeProgress }}%</span>
+                <span class="progress-label">已完成</span>
+              </div>
+              <div class="progress-stats">
+                <div class="card-count">
+                  <span class="count-current">{{ currentIndex + 1 }}</span>
+                  <span class="count-separator">/</span>
+                  <span class="count-total">{{ filteredFlashcards.length }}</span>
+                </div>
+                <div class="keyboard-shortcuts">
+                  <div class="shortcut-item">
+                    <span class="shortcut-key">空格</span>
+                    <span class="shortcut-desc">翻转</span>
+                  </div>
+                </div>
+                <div class="progress-navigation">
+                  <button @click="prevCard" :disabled="currentIndex <= 0" class="progress-nav-btn">
+                    <span class="btn-icon">←</span>
+                    <span>上一张</span>
+                  </button>
+                  <button @click="nextCard" :disabled="currentIndex >= filteredFlashcards.length - 1" class="progress-nav-btn">
+                    <span class="btn-icon">→</span>
+                    <span>下一张</span>
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="progress-bar-container">
               <div class="progress-bar" :style="{ width: `${themeProgress}%` }"></div>
@@ -68,25 +144,9 @@
         <div class="main-content-wrapper">
           <!-- Flashcard area -->
           <div class="flashcard-area">
-            <!-- Keyboard shortcuts -->
-            <div v-if="filteredFlashcards.length > 0" class="keyboard-shortcuts">
-              <div class="shortcut-item">
-                <span class="shortcut-key">←</span>
-                <span class="shortcut-desc">上一张</span>
-              </div>
-              <div class="shortcut-item">
-                <span class="shortcut-key">→</span>
-                <span class="shortcut-desc">下一张</span>
-              </div>
-              <div class="shortcut-item">
-                <span class="shortcut-key">空格</span>
-                <span class="shortcut-desc">翻转卡片</span>
-              </div>
-            </div>
-
             <!-- Flashcard -->
             <div v-if="filteredFlashcards.length > 0" class="flashcard-container">
-              <div class="flashcard" :class="{ flipped: isFlipped }" @click="flipCard"
+              <div class="flashcard" :class="{ flipped: isFlipped }" @click="handleCardClick"
                 :style="currentThemeData ? { '--theme-color': currentThemeData.color } : {}">
                 <div class="flashcard-front">
                   <div class="flashcard-content">{{ currentCard.question }}</div>
@@ -95,17 +155,6 @@
                   <div class="flashcard-content" v-html="currentCard.answer"></div>
                 </div>
               </div>
-            </div>
-
-            <!-- Navigation controls -->
-            <div v-if="filteredFlashcards.length > 0" class="navigation-controls">
-              <button @click="prevCard" :disabled="currentIndex <= 0" class="nav-btn prev-btn">
-                <span class="btn-icon">←</span>
-              </button>
-              <span class="card-count">{{ currentIndex + 1 }} / {{ filteredFlashcards.length }}</span>
-              <button @click="nextCard" :disabled="currentIndex >= filteredFlashcards.length - 1" class="nav-btn next-btn">
-                <span class="btn-icon">→</span>
-              </button>
             </div>
 
             <!-- No cards message -->
@@ -255,6 +304,9 @@ const formatReviewTime = computed(() => {
   return `${minutes}分钟后`
 })
 
+const filterMode = computed(() => flashcardStore.filterMode)
+const searchQuery = ref('')
+
 // Methods
 function flipCard() {
   const isNowFlipped = flashcardStore.flipCard()
@@ -333,6 +385,24 @@ function resetCardStatus() {
   flashcardStore.resetCardStatus()
 }
 
+function setFilterMode(mode) {
+  flashcardStore.setFilterMode(mode)
+}
+
+function handleSearch() {
+  flashcardStore.setSearchQuery(searchQuery.value)
+}
+
+function handleCardClick() {
+  if (!isFlipped.value) {
+    // 如果卡片是正面，翻转它
+    flipCard()
+  } else {
+    // 如果卡片是背面，切换到下一张卡片
+    nextCard()
+  }
+}
+
 // Keyboard event handler
 function handleKeyDown(e) {
   if (flashcards.value.length === 0) return
@@ -342,7 +412,7 @@ function handleKeyDown(e) {
   } else if (e.key === 'ArrowRight') {
     nextCard()
   } else if (e.key === ' ' || e.key === 'Enter') {
-    flipCard()
+    handleCardClick()
     e.preventDefault() // Prevent space from scrolling the page
   }
 }
@@ -408,7 +478,7 @@ watch(currentIndex, () => {
 
 <style scoped>
 .container {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -417,50 +487,48 @@ watch(currentIndex, () => {
   display: flex;
   gap: 20px;
   margin-top: 20px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.category-filter {
-  width: 200px;
+.left-sidebar {
+  width: 240px;
   flex-shrink: 0;
-  background-color: #f8f8f8;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   position: sticky;
   top: 20px;
+  height: fit-content;
+}
+
+.category-section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.category-section h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
+  color: #333;
+  font-weight: 600;
 }
 
 .category-buttons {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 100%;
+  max-height: 300px;
   overflow-y: auto;
   padding-right: 5px;
 }
 
-.category-buttons::-webkit-scrollbar {
-  width: 6px;
-}
-
-.category-buttons::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.category-buttons::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 3px;
-}
-
-.category-buttons::-webkit-scrollbar-thumb:hover {
-  background: #ccc;
-}
-
 .category-btn {
   padding: 12px 16px;
-  background-color: #f0f0f0;
+  background-color: #f8f9fa;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -473,7 +541,7 @@ watch(currentIndex, () => {
 }
 
 .category-btn:hover {
-  background-color: #e0e0e0;
+  background-color: #f0f0f0;
 }
 
 .category-btn.active {
@@ -481,243 +549,99 @@ watch(currentIndex, () => {
   color: white;
 }
 
-.content-area {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Current theme styles */
-.current-theme {
+.search-filter-section {
   background-color: white;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin-bottom: 30px;
 }
 
-.theme-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.theme-title {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.theme-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background-color: var(--theme-color, #ff6b00);
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  font-size: 1.4rem;
-  flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.theme-title h2 {
-  margin: 0;
-  font-size: 1.8rem;
-  color: #333;
-  font-weight: 600;
-}
-
-.theme-stats {
-  display: flex;
-  gap: 24px;
-}
-
-.stats-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.stats-label {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 4px;
-}
-
-.stats-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #333;
-}
-
-/* Theme progress styles */
-.theme-progress {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.progress-info {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 120px;
-}
-
-.progress-percentage {
-  font-size: 2rem;
-  font-weight: bold;
-  color: var(--theme-color, #ff6b00);
-  line-height: 1;
-}
-
-.progress-label {
-  font-size: 1rem;
-  color: #666;
-}
-
-.progress-bar-container {
-  flex: 1;
-  height: 12px;
-  background-color: #f0f0f0;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background-color: var(--theme-color, #ff6b00);
-  border-radius: 6px;
-  transition: width 0.5s ease;
-}
-
-/* Keyboard shortcuts styles */
-.keyboard-shortcuts {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
+.search-box {
   margin-bottom: 15px;
-  flex-wrap: wrap;
 }
 
-.shortcut-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.shortcut-key {
-  display: inline-block;
-  padding: 5px 10px;
-  background-color: #f0f0f0;
-  border-radius: 5px;
-  font-weight: bold;
+.search-box input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
   font-size: 0.9rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #ddd;
+  transition: all 0.3s;
+  background-color: #f8f9fa;
 }
 
-.shortcut-desc {
-  font-size: 0.9rem;
-  color: #666;
+.search-box input:focus {
+  outline: none;
+  border-color: var(--theme-color, #ff6b00);
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.1);
+  background-color: white;
 }
 
-/* Controls styles */
-.controls {
+.filter-group {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 30px;
-  gap: 20px;
+  gap: 8px;
 }
 
-.navigation-controls,
-.action-controls {
+.filter-btn {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.controls button {
-  padding: 10px 20px;
-  background-color: #ff6b00;
-  color: white;
+  gap: 8px;
+  padding: 10px 12px;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s;
-  min-width: 100px;
-  text-align: center;
-}
-
-.controls button:hover:not(:disabled) {
-  background-color: #e05e00;
-}
-
-.controls button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.delete-btn {
-  background-color: #ff9500 !important;
-}
-
-.delete-btn:hover {
-  background-color: #e68600 !important;
-}
-
-.card-count {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-}
-
-.no-cards-message {
-  text-align: center;
-  margin: 50px 0;
-}
-
-.no-cards-message p {
-  font-size: 1.2rem;
+  border-radius: 6px;
+  background-color: #f8f9fa;
   color: #666;
-  margin-bottom: 20px;
-}
-
-.return-btn {
-  padding: 10px 20px;
-  background-color: #ff6b00;
-  color: white;
-  border: none;
-  border-radius: 5px;
   cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+  text-align: left;
 }
 
-.return-btn:hover {
-  background-color: #e05e00;
+.filter-btn:hover {
+  background-color: #f0f0f0;
 }
 
-/* Flashcard styles */
+.filter-btn.active {
+  background-color: var(--theme-color, #ff6b00);
+  color: white;
+}
+
+.content-area {
+  flex: 1;
+  min-width: 0;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.main-content-wrapper {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.flashcard-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
 .flashcard-container {
   perspective: 1000px;
-  margin: 40px auto;
+  margin: 20px auto;
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
 }
 
 .flashcard {
   position: relative;
   width: 100%;
-  height: 400px;
+  height: 500px;
   transform-style: preserve-3d;
   transition: transform 0.6s;
   cursor: pointer;
@@ -803,26 +727,74 @@ watch(currentIndex, () => {
   color: #333;
 }
 
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .flashcard {
-    height: 300px;
-  }
-
-  .flashcard-content {
-    font-size: 1rem;
-  }
-
-  .flashcard-back .flashcard-content {
-    font-size: 0.95rem;
-  }
+/* No cards message */
+.no-cards-message {
+  text-align: center;
+  margin: 50px 0;
 }
 
+.no-cards-message p {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.return-btn {
+  padding: 10px 20px;
+  background-color: #ff6b00;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.return-btn:hover {
+  background-color: #e05e00;
+}
+
+/* Navigation controls style */
+.navigation-controls {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.nav-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--theme-color, #ff6b00);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  font-size: 1.2rem;
+}
+
+.nav-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background-color: var(--theme-color-dark, #e05e00);
+}
+
+.nav-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Right sidebar */
 .right-sidebar {
-  width: 220px;
+  width: 240px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   padding: 20px;
   background-color: #f8f9fa;
   border-radius: 12px;
@@ -830,6 +802,273 @@ watch(currentIndex, () => {
   position: sticky;
   top: 20px;
   height: fit-content;
+  margin-top: 20px;
+}
+
+/* Right sidebar button styles */
+.status-btn, .action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+  width: 100%;
+  justify-content: flex-start;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.btn-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.btn-label {
+  flex: 1;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Current theme styles */
+.current-theme {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.theme-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.theme-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.theme-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background-color: var(--theme-color, #ff6b00);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.theme-title h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.theme-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.stats-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.stats-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Theme progress styles */
+.theme-progress {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.progress-info {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.progress-percentage {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--theme-color, #ff6b00);
+  line-height: 1;
+}
+
+.progress-label {
+  font-size: 1rem;
+  color: #666;
+}
+
+.progress-stats {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.card-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 1.2rem;
+  color: #333;
+  padding: 4px 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.count-current {
+  font-weight: 600;
+  color: var(--theme-color, #ff6b00);
+}
+
+.count-separator {
+  color: #999;
+  margin: 0 2px;
+}
+
+.count-total {
+  color: #666;
+}
+
+.keyboard-shortcuts {
+  display: flex;
+  gap: 12px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shortcut-key {
+  display: inline-block;
+  padding: 2px 6px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #666;
+  border: 1px solid #e0e0e0;
+}
+
+.shortcut-desc {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.progress-bar-container {
+  height: 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: var(--theme-color, #ff6b00);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* Controls styles */
+.controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 20px;
+}
+
+.action-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+.action-btn {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 44px;
+}
+
+.delete-btn {
+  background-color: #ffebee !important;
+  color: #f44336;
+}
+
+.delete-btn:hover {
+  background-color: #ffcdd2 !important;
+}
+
+.review-status {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.review-due {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.next-review {
+  color: #2196F3;
+}
+
+.review-icon {
+  margin-right: 5px;
+  font-size: 1.1rem;
 }
 
 .card-status-controls {
@@ -845,26 +1084,14 @@ watch(currentIndex, () => {
 .status-group {
   display: flex;
   gap: 8px;
+  width: 100%;
 }
 
 .status-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-size: 0.9rem;
-  background-color: #f0f0f0;
-  color: #666;
   flex: 1;
-}
-
-.status-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 0;
+  height: auto;
+  min-height: 44px;
 }
 
 .status-btn.active {
@@ -889,143 +1116,70 @@ watch(currentIndex, () => {
   background-color: #d32f2f;
 }
 
-.btn-icon {
-  font-size: 1.2rem;
-  width: 24px;
-  text-align: center;
-}
-
-.btn-label {
-  flex: 1;
-  text-align: left;
-}
-
-.action-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background-color: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 15px;
-  background-color: #f0f0f0;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s;
-  text-align: left;
-  width: 100%;
-}
-
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: #e0e0e0;
-}
-
-.delete-btn {
-  background-color: #ffebee !important;
-  color: #f44336;
-}
-
-.delete-btn:hover {
-  background-color: #ffcdd2 !important;
-}
-
-.review-status {
-  padding: 15px;
-  border-radius: 8px;
-  background-color: white;
-  text-align: center;
-  font-size: 0.9rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.review-due {
-  color: #f44336;
-  font-weight: bold;
-}
-
-.next-review {
-  color: #2196F3;
-}
-
-.review-icon {
-  margin-right: 5px;
-  font-size: 1.1rem;
-}
-
-.main-content-wrapper {
-  display: flex;
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.flashcard-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-
-.navigation-controls {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.nav-btn {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: none;
-  background-color: var(--theme-color, #ff6b00);
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-  font-size: 1.5rem;
-}
-
-.nav-btn:hover:not(:disabled) {
-  transform: scale(1.1);
-  background-color: var(--theme-color-dark, #e05e00);
-}
-
-.nav-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.card-count {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-  min-width: 80px;
-  text-align: center;
-}
-
 /* Responsive adjustments */
+@media (max-width: 1400px) {
+  .main-content {
+    max-width: 1200px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .main-content {
+    max-width: 1000px;
+  }
+  
+  .left-sidebar,
+  .right-sidebar {
+    width: 220px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    max-width: 800px;
+  }
+  
+  .left-sidebar,
+  .right-sidebar {
+    width: 200px;
+  }
+}
+
 @media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+    max-width: 600px;
+  }
+
   .main-content-wrapper {
     flex-direction: column;
   }
 
+  .left-sidebar,
   .right-sidebar {
     width: 100%;
     position: static;
+  }
+
+  .category-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-height: none;
+  }
+
+  .category-btn {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .filter-group {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    flex: 1;
+    min-width: 120px;
   }
 
   .status-group {
@@ -1035,5 +1189,77 @@ watch(currentIndex, () => {
   .status-btn {
     width: 100%;
   }
+
+  .flashcard-area {
+    padding: 0;
+  }
+
+  .navigation-controls {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    max-width: 100%;
+  }
+
+  .category-buttons,
+  .filter-group {
+    flex-direction: column;
+  }
+
+  .category-btn,
+  .filter-btn {
+    width: 100%;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .flashcard {
+    height: 300px;
+  }
+
+  .flashcard-content {
+    font-size: 1rem;
+  }
+
+  .flashcard-back .flashcard-content {
+    font-size: 0.95rem;
+  }
+}
+
+/* 在样式部分添加新的样式 */
+.progress-navigation {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.progress-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  background-color: var(--theme-color, #ff6b00);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.progress-nav-btn:hover:not(:disabled) {
+  background-color: var(--theme-color-dark, #e05e00);
+  transform: translateY(-2px);
+}
+
+.progress-nav-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
 }
 </style>
