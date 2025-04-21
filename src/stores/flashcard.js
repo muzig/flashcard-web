@@ -6,13 +6,31 @@ export const useFlashcardStore = defineStore('flashcard', () => {
   const flashcards = ref([])
   const currentIndex = ref(0)
   const isFlipped = ref(false)
+  const selectedCategory = ref('')
 
   // Getters
   const currentCard = computed(() => {
-    if (flashcards.value.length === 0) {
+    if (filteredFlashcards.value.length === 0) {
       return { question: '', answer: '' }
     }
-    return flashcards.value[currentIndex.value]
+    return filteredFlashcards.value[currentIndex.value] || filteredFlashcards.value[0]
+  })
+
+  const categories = computed(() => {
+    const uniqueCategories = new Set()
+    flashcards.value.forEach(card => {
+      if (card.category) {
+        uniqueCategories.add(card.category)
+      }
+    })
+    return Array.from(uniqueCategories)
+  })
+
+  const filteredFlashcards = computed(() => {
+    if (!selectedCategory.value) {
+      return flashcards.value
+    }
+    return flashcards.value.filter(card => card.category === selectedCategory.value)
   })
 
   // Actions
@@ -26,11 +44,11 @@ export const useFlashcardStore = defineStore('flashcard', () => {
         const line = lines[i].trim()
         if (!line) continue
 
-        const [question, answer] = line.split('\t')
+        const [category, question, answer] = line.split('\t')
         if (question && answer) {
           // 处理答案文本，添加格式化
           const formattedAnswer = formatAnswerText(answer)
-          cards.push({ question, answer: formattedAnswer })
+          cards.push({ category, question, answer: formattedAnswer })
         }
       }
 
@@ -90,7 +108,7 @@ export const useFlashcardStore = defineStore('flashcard', () => {
   }
 
   function nextCard() {
-    if (currentIndex.value < flashcards.value.length - 1) {
+    if (currentIndex.value < filteredFlashcards.value.length - 1) {
       currentIndex.value++
       isFlipped.value = false
       return true
@@ -106,18 +124,28 @@ export const useFlashcardStore = defineStore('flashcard', () => {
   function deleteCurrentCard() {
     if (flashcards.value.length === 0) return false
     
-    flashcards.value.splice(currentIndex.value, 1)
+    // Find the actual index in the full flashcards array
+    const currentFilteredCard = filteredFlashcards.value[currentIndex.value]
+    const fullIndex = flashcards.value.findIndex(card => 
+      card.question === currentFilteredCard.question && 
+      card.answer === currentFilteredCard.answer
+    )
     
-    // Adjust current index if needed
-    if (currentIndex.value >= flashcards.value.length && flashcards.value.length > 0) {
-      currentIndex.value = flashcards.value.length - 1
+    if (fullIndex !== -1) {
+      flashcards.value.splice(fullIndex, 1)
+      
+      // Adjust current index if needed
+      if (currentIndex.value >= filteredFlashcards.value.length - 1 && filteredFlashcards.value.length > 0) {
+        currentIndex.value = filteredFlashcards.value.length - 1
+      }
+      
+      return true
     }
-    
-    return true
+    return false
   }
 
   function setCurrentIndex(index) {
-    if (index >= 0 && index < flashcards.value.length) {
+    if (index >= 0 && index < filteredFlashcards.value.length) {
       currentIndex.value = index
       isFlipped.value = false
       return true
@@ -125,17 +153,28 @@ export const useFlashcardStore = defineStore('flashcard', () => {
     return false
   }
 
+  function setCategory(category) {
+    selectedCategory.value = category
+    // Reset to first card when changing category
+    currentIndex.value = 0
+    isFlipped.value = false
+  }
+
   return {
     flashcards,
     currentIndex,
     isFlipped,
     currentCard,
+    categories,
+    selectedCategory,
+    filteredFlashcards,
     parseAndLoadCards,
     flipCard,
     prevCard,
     nextCard,
     resetCards,
     deleteCurrentCard,
-    setCurrentIndex
+    setCurrentIndex,
+    setCategory
   }
 })

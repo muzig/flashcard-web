@@ -7,71 +7,112 @@
     <!-- Loading state -->
     <LoadingOverlay v-if="isLoading" />
 
-    <!-- Current theme header -->
-    <div v-if="currentThemeData" class="current-theme">
-      <div class="theme-icon" :style="{ backgroundColor: currentThemeData.color }">
-        {{ currentThemeData.icon.charAt(0).toUpperCase() }}
-      </div>
-      <h2>{{ currentThemeData.name }}</h2>
-    </div>
-
-    <!-- Theme progress -->
-    <div v-if="currentThemeData" class="theme-progress">
-      <div class="progress-bar-container">
-        <div class="progress-bar" :style="{ width: `${themeProgress}%` }"></div>
-      </div>
-      <div class="progress-stats">
-        已学习 {{ themeProgress }}% ({{ viewedCardsCount }}/{{ flashcards.length }})
-      </div>
-    </div>
-
-    <!-- Keyboard shortcuts -->
-    <div v-if="flashcards.length > 0" class="keyboard-shortcuts">
-      <div class="shortcut-item">
-        <span class="shortcut-key">←</span>
-        <span class="shortcut-desc">上一张</span>
-      </div>
-      <div class="shortcut-item">
-        <span class="shortcut-key">→</span>
-        <span class="shortcut-desc">下一张</span>
-      </div>
-      <div class="shortcut-item">
-        <span class="shortcut-key">空格</span>
-        <span class="shortcut-desc">翻转卡片</span>
-      </div>
-    </div>
-
-    <!-- Controls -->
-    <div v-if="flashcards.length > 0" class="controls">
-      <div class="navigation-controls">
-        <button @click="prevCard" :disabled="currentIndex <= 0">上一张</button>
-        <span class="card-count">{{ currentIndex + 1 }} / {{ flashcards.length }}</span>
-        <button @click="nextCard" :disabled="currentIndex >= flashcards.length - 1">下一张</button>
-      </div>
-      <div class="action-controls">
-        <button @click="resetCards">重置</button>
-        <button @click="goToHome">返回主题选择</button>
-        <button class="delete-btn" @click="deleteCurrentCard">删除卡片</button>
-      </div>
-    </div>
-
-    <!-- Flashcard -->
-    <div v-if="flashcards.length > 0" class="flashcard-container">
-      <div class="flashcard" :class="{ flipped: isFlipped }" @click="flipCard"
-        :style="currentThemeData ? { '--theme-color': currentThemeData.color } : {}">
-        <div class="flashcard-front">
-          <div class="flashcard-content">{{ currentCard.question }}</div>
-        </div>
-        <div class="flashcard-back">
-          <div class="flashcard-content" v-html="currentCard.answer"></div>
+    <div class="main-content">
+      <!-- Category filter -->
+      <div v-if="categories.length > 0" class="category-filter">
+        <div class="category-buttons">
+          <button 
+            class="category-btn" 
+            :class="{ active: !selectedCategory }"
+            @click="setCategory('')"
+          >
+            全部
+          </button>
+          <button 
+            v-for="category in categories" 
+            :key="category"
+            class="category-btn"
+            :class="{ active: selectedCategory === category }"
+            @click="setCategory(category)"
+          >
+            {{ category }}
+          </button>
         </div>
       </div>
-    </div>
 
-    <!-- No cards message -->
-    <div v-else-if="!isLoading" class="no-cards-message">
-      <p>没有找到闪卡数据。</p>
-      <button @click="goToHome" class="return-btn">返回主题选择</button>
+      <div class="content-area">
+        <!-- Current theme header -->
+        <div v-if="currentThemeData" class="current-theme">
+          <div class="theme-header">
+            <div class="theme-title">
+              <div class="theme-icon" :style="{ backgroundColor: currentThemeData.color }">
+                {{ currentThemeData.icon.charAt(0).toUpperCase() }}
+              </div>
+              <h2>{{ currentThemeData.name }}</h2>
+            </div>
+            <div class="theme-stats">
+              <div class="stats-item">
+                <span class="stats-label">当前分类</span>
+                <span class="stats-value">{{ selectedCategory || '全部' }}</span>
+              </div>
+              <div class="stats-item">
+                <span class="stats-label">学习进度</span>
+                <span class="stats-value">{{ viewedCardsCount }}/{{ filteredFlashcards.length }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Theme progress -->
+          <div class="theme-progress">
+            <div class="progress-info">
+              <span class="progress-percentage">{{ themeProgress }}%</span>
+              <span class="progress-label">已完成</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" :style="{ width: `${themeProgress}%` }"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Keyboard shortcuts -->
+        <div v-if="filteredFlashcards.length > 0" class="keyboard-shortcuts">
+          <div class="shortcut-item">
+            <span class="shortcut-key">←</span>
+            <span class="shortcut-desc">上一张</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-key">→</span>
+            <span class="shortcut-desc">下一张</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-key">空格</span>
+            <span class="shortcut-desc">翻转卡片</span>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div v-if="filteredFlashcards.length > 0" class="controls">
+          <div class="navigation-controls">
+            <button @click="prevCard" :disabled="currentIndex <= 0">上一张</button>
+            <span class="card-count">{{ currentIndex + 1 }} / {{ filteredFlashcards.length }}</span>
+            <button @click="nextCard" :disabled="currentIndex >= filteredFlashcards.length - 1">下一张</button>
+          </div>
+          <div class="action-controls">
+            <button @click="resetCards">重置</button>
+            <button @click="goToHome">返回主题选择</button>
+            <button class="delete-btn" @click="deleteCurrentCard">删除卡片</button>
+          </div>
+        </div>
+
+        <!-- Flashcard -->
+        <div v-if="filteredFlashcards.length > 0" class="flashcard-container">
+          <div class="flashcard" :class="{ flipped: isFlipped }" @click="flipCard"
+            :style="currentThemeData ? { '--theme-color': currentThemeData.color } : {}">
+            <div class="flashcard-front">
+              <div class="flashcard-content">{{ currentCard.question }}</div>
+            </div>
+            <div class="flashcard-back">
+              <div class="flashcard-content" v-html="currentCard.answer"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- No cards message -->
+        <div v-else-if="!isLoading" class="no-cards-message">
+          <p>没有找到闪卡数据。</p>
+          <button @click="goToHome" class="return-btn">返回主题选择</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -101,12 +142,30 @@ const currentCard = computed(() => flashcardStore.currentCard)
 
 const viewedCardsCount = computed(() => {
   const themeViewed = progressStore.viewedCards[themeId.value]
-  return themeViewed ? Object.keys(themeViewed).length : 0
+  if (!themeViewed) return 0
+
+  // Count only viewed cards in the current category
+  if (selectedCategory.value) {
+    return filteredFlashcards.value.filter(card => {
+      const cardIndex = flashcards.value.findIndex(f => 
+        f.question === card.question && f.answer === card.answer
+      )
+      return themeViewed[cardIndex]
+    }).length
+  }
+
+  return Object.keys(themeViewed).length
 })
 
 const themeProgress = computed(() => {
-  return progressStore.getThemeProgress(themeId.value, flashcards.value.length)
+  const totalCards = filteredFlashcards.value.length
+  if (totalCards === 0) return 0
+  return Math.round((viewedCardsCount.value / totalCards) * 100)
 })
+
+const categories = computed(() => flashcardStore.categories)
+const selectedCategory = computed(() => flashcardStore.selectedCategory)
+const filteredFlashcards = computed(() => flashcardStore.filteredFlashcards)
 
 // Methods
 function flipCard() {
@@ -168,6 +227,10 @@ function goToHome() {
   
   // Navigate to home
   router.push({ name: 'home' })
+}
+
+function setCategory(category) {
+  flashcardStore.setCategory(category)
 }
 
 // Keyboard event handler
@@ -245,174 +308,190 @@ watch(currentIndex, () => {
 
 <style scoped>
 .container {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.flashcard-container {
-  perspective: 1000px;
-  margin: 40px auto;
-  width: 100%;
-  max-width: 600px;
-}
-
-.flashcard {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  transform-style: preserve-3d;
-  transition: transform 0.6s;
-  cursor: pointer;
-  border-radius: 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.flashcard.flipped {
-  transform: rotateY(180deg);
-}
-
-.flashcard-front,
-.flashcard-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
+.main-content {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  border-radius: 15px;
-  background-color: white;
+  gap: 20px;
+  margin-top: 20px;
 }
 
-.flashcard-back {
-  transform: rotateY(180deg);
-  background-color: var(--theme-color, #f5f5f5);
+.category-filter {
+  width: 200px;
+  flex-shrink: 0;
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: calc(100vh - 200px);
+  position: sticky;
+  top: 20px;
+}
+
+.category-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 100%;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.category-buttons::-webkit-scrollbar {
+  width: 6px;
+}
+
+.category-buttons::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.category-buttons::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.category-buttons::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+.category-btn {
+  padding: 12px 16px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.category-btn.active {
+  background-color: var(--theme-color, #ff6b00);
   color: white;
 }
 
-.flashcard-content {
-  font-size: 1.2rem;
-  line-height: 1.6;
-  text-align: center;
-  width: 100%;
-  white-space: pre-wrap;
-}
-
-/* 答案文本样式优化 */
-.flashcard-back .flashcard-content {
-  text-align: left;
-  font-size: 1.1rem;
-  line-height: 1.8;
-}
-
-/* 列表项样式 */
-.flashcard-back .flashcard-content ul,
-.flashcard-back .flashcard-content ol {
-  margin: 10px 0;
-  padding-left: 20px;
-}
-
-.flashcard-back .flashcard-content li {
-  margin-bottom: 8px;
-}
-
-/* 强调文本样式 */
-.flashcard-back .flashcard-content strong {
-  color: #fff;
-  font-weight: bold;
-}
-
-/* 代码块样式 */
-.flashcard-back .flashcard-content code {
-  background-color: rgba(255, 255, 255, 0.2);
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: monospace;
-}
-
-/* 分隔线样式 */
-.flashcard-back .flashcard-content hr {
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-  margin: 15px 0;
-}
-
-/* 问题文本样式 */
-.flashcard-front .flashcard-content {
-  font-size: 1.3rem;
-  font-weight: 500;
-  color: #333;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .flashcard {
-    height: 300px;
-  }
-
-  .flashcard-content {
-    font-size: 1rem;
-  }
-
-  .flashcard-back .flashcard-content {
-    font-size: 0.95rem;
-  }
+.content-area {
+  flex: 1;
+  min-width: 0;
 }
 
 /* Current theme styles */
 .current-theme {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.theme-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
   margin-bottom: 20px;
 }
 
-.current-theme h2 {
-  margin: 0 0 0 15px;
+.theme-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .theme-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #ff6b00;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background-color: var(--theme-color, #ff6b00);
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.theme-title h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.theme-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.stats-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.stats-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
 }
 
 /* Theme progress styles */
 .theme-progress {
-  max-width: 600px;
-  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.progress-info {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.progress-percentage {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--theme-color, #ff6b00);
+  line-height: 1;
+}
+
+.progress-label {
+  font-size: 1rem;
+  color: #666;
 }
 
 .progress-bar-container {
-  width: 100%;
-  height: 10px;
+  flex: 1;
+  height: 12px;
   background-color: #f0f0f0;
-  border-radius: 5px;
+  border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 5px;
 }
 
 .progress-bar {
   height: 100%;
-  background-color: #ff6b00;
-  border-radius: 5px;
+  background-color: var(--theme-color, #ff6b00);
+  border-radius: 6px;
   transition: width 0.5s ease;
-}
-
-.progress-stats {
-  text-align: center;
-  font-size: 0.9rem;
-  color: #666;
 }
 
 /* Keyboard shortcuts styles */
@@ -525,5 +604,117 @@ watch(currentIndex, () => {
 
 .return-btn:hover {
   background-color: #e05e00;
+}
+
+/* Flashcard styles */
+.flashcard-container {
+  perspective: 1000px;
+  margin: 40px auto;
+  width: 100%;
+  max-width: 600px;
+}
+
+.flashcard {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+  cursor: pointer;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.flashcard.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front,
+.flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  border-radius: 15px;
+  background-color: white;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+  background-color: var(--theme-color, #f5f5f5);
+  color: white;
+}
+
+.flashcard-content {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  text-align: center;
+  width: 100%;
+  white-space: pre-wrap;
+}
+
+/* 答案文本样式优化 */
+.flashcard-back .flashcard-content {
+  text-align: left;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+/* 列表项样式 */
+.flashcard-back .flashcard-content ul,
+.flashcard-back .flashcard-content ol {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.flashcard-back .flashcard-content li {
+  margin-bottom: 8px;
+}
+
+/* 强调文本样式 */
+.flashcard-back .flashcard-content strong {
+  color: #fff;
+  font-weight: bold;
+}
+
+/* 代码块样式 */
+.flashcard-back .flashcard-content code {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+/* 分隔线样式 */
+.flashcard-back .flashcard-content hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  margin: 15px 0;
+}
+
+/* 问题文本样式 */
+.flashcard-front .flashcard-content {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: #333;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .flashcard {
+    height: 300px;
+  }
+
+  .flashcard-content {
+    font-size: 1rem;
+  }
+
+  .flashcard-back .flashcard-content {
+    font-size: 0.95rem;
+  }
 }
 </style>
