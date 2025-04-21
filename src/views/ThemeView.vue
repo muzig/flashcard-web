@@ -518,7 +518,23 @@ watch(currentIndex, () => {
   gap: 8px;
   max-height: 300px;
   overflow-y: auto;
-  padding-right: 5px;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc #f8f9fa;
+}
+
+.category-buttons::-webkit-scrollbar {
+  width: 6px;
+}
+
+.category-buttons::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 3px;
+}
+
+.category-buttons::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 3px;
 }
 
 .category-btn {
@@ -530,9 +546,15 @@ watch(currentIndex, () => {
   font-size: 0.9rem;
   transition: all 0.3s;
   text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  line-height: 1.4;
 }
 
 .category-btn:hover {
@@ -1145,11 +1167,13 @@ watch(currentIndex, () => {
     flex-direction: row;
     flex-wrap: wrap;
     max-height: none;
+    padding-right: 0;
   }
 
   .category-btn {
-    flex: 1;
-    min-width: 120px;
+    flex: 1 1 auto;
+    min-width: 150px;
+    max-width: calc(50% - 4px);
   }
 
   .filter-group {
