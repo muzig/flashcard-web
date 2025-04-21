@@ -4,5 +4,6 @@
     "description": "Comprehensive MySQL interview preparation covering essential concepts, optimization, and best practices",
     "icon": "mysql",
     "color": "#4479a1",
+    "category": "database",
     "cards": "cards.tsv"
 }

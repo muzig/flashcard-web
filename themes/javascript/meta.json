@@ -4,5 +4,6 @@
   "description": "学习JavaScript编程语言的核心概念和常用功能。",
   "icon": "js",
   "color": "#f7df1e",
+  "category": "frontend",
   "cards": "cards.tsv"
 }

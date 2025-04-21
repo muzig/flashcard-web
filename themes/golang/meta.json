@@ -4,5 +4,6 @@
     "description": "深入理解Golang核心概念、并发编程、内存管理、性能优化等面试重点内容。",
     "icon": "go",
     "color": "#00ADD8",
+    "category": "programming",
     "cards": "cards.tsv"
 }

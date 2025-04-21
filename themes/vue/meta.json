@@ -4,5 +4,6 @@
   "description": "学习Vue.js框架的基本概念、组件化开发和状态管理。",
   "icon": "vue",
   "color": "#42b883",
+  "category": "frontend",
   "cards": "cards.tsv"
 }
