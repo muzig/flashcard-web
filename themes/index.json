@@ -19,6 +19,10 @@
     {
       "id": "mysql",
       "path": "mysql/meta.json"
+    },
+    {
+      "id": "ts",
+      "path": "ts/meta.json"
     }
   ]
 }

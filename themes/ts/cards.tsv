@@ -1,0 +1,11 @@
+category	question	answer
+TypeScript Basics	什么是 TypeScript？	TypeScript 是 JavaScript 的超集，添加了静态类型系统。它允许开发者在开发时定义变量、函数参数和返回值的类型，从而提供更好的代码提示、错误检查和代码重构能力。
+TypeScript Basics	TypeScript 和 JavaScript 的主要区别是什么？	主要区别包括：1) TypeScript 是静态类型语言，而 JavaScript 是动态类型语言；2) TypeScript 支持接口、泛型等面向对象特性；3) TypeScript 需要编译成 JavaScript 才能运行；4) TypeScript 提供了更好的 IDE 支持和代码提示。
+TypeScript Types	TypeScript 中的基本类型有哪些？	TypeScript 的基本类型包括：number, string, boolean, null, undefined, void, any, never, object, array, tuple, enum 等。
+TypeScript Types	什么是联合类型（Union Types）？	联合类型允许一个变量可以是多种类型中的一种，使用 | 符号连接。例如：let value: string | number; 表示 value 可以是字符串或数字。
+TypeScript Interfaces	什么是接口（Interface）？	接口是 TypeScript 中定义对象结构的一种方式，它描述了对象应该具有的属性和方法。接口可以被类实现，也可以用于类型检查。
+TypeScript Generics	什么是泛型（Generics）？	泛型允许我们创建可重用的组件，这些组件可以处理多种类型而不是单一类型。它使用类型变量来表示类型，例如：function identity<T>(arg: T): T { return arg; }
+TypeScript Advanced	什么是类型断言（Type Assertion）？	类型断言是告诉编译器"相信我，我知道这个值的类型"的方式。有两种语法：1) 尖括号语法：<string>value；2) as 语法：value as string。
+TypeScript Advanced	什么是类型守卫（Type Guard）？	类型守卫是运行时检查，用于缩小变量的类型范围。常见的类型守卫包括：typeof, instanceof, in 操作符和用户定义的类型守卫。
+TypeScript Advanced	什么是装饰器（Decorators）？	装饰器是一种特殊类型的声明，可以附加到类声明、方法、访问器、属性或参数上。装饰器使用 @expression 的形式，其中 expression 必须是一个函数。
+TypeScript Advanced	什么是命名空间（Namespaces）？	命名空间是一种组织代码的方式，可以避免命名冲突。使用 namespace 关键字定义，例如：namespace Validation { ... } 

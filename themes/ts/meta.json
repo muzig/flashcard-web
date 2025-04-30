@@ -1,0 +1,9 @@
+{
+    "id": "ts",
+    "name": "TypeScript",
+    "description": "TypeScript 面试题集",
+    "icon": "typescript",
+    "color": "#3178c6",
+    "category": "programming",
+    "cards": "cards.tsv"
+}

@@ -111,18 +111,25 @@ function handleFileUpload(event) {
 }
 
 function downloadTemplate() {
-  const templateContent = 'question\tanswer\n问题1\t答案1\n问题2\t答案2\n问题3\t答案3'
-  const blob = new Blob([templateContent], { type: 'text/tab-separated-values' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = '闪卡模板.tsv'
-  document.body.appendChild(a)
-  a.click()
-  setTimeout(() => {
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, 100)
+  fetch('/template/flashcard_template.tsv')
+    .then(response => response.text())
+    .then(content => {
+      const blob = new Blob([content], { type: 'text/tab-separated-values' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = '闪卡模板.tsv'
+      document.body.appendChild(a)
+      a.click()
+      setTimeout(() => {
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }, 100)
+    })
+    .catch(error => {
+      console.error('下载模板失败:', error)
+      alert('下载模板失败，请重试')
+    })
 }
 
 function createCustomTheme() {
