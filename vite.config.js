@@ -14,4 +14,5 @@ export default defineConfig({
     host: '0.0.0.0', // Listen on all network interfaces
     port: 5173 // Default port
   },
+  base: '/flashcard_web/', // 设置基础路径为你的仓库名称
 })
