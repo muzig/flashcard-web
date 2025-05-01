@@ -1,5 +1,55 @@
 <template>
   <div class="container">
+    <!-- Management panel with toggle (top-left corner) -->
+    <div v-if="!hasSelectedTheme" class="management-panel">
+      <div class="section-header">
+        <h2>管理面板</h2>
+        <button class="toggle-btn" @click.stop="toggleCustomThemeCollapse">
+          <span class="toggle-icon">{{ isCustomThemeCollapsed ? '▼' : '▲' }}</span>
+          {{ isCustomThemeCollapsed ? '展开' : '收起' }}
+        </button>
+      </div>
+
+      <!-- Panel content (collapsible) -->
+      <div class="panel-wrapper" :class="{ 'collapsed': isCustomThemeCollapsed }">
+        <!-- Theme management buttons -->
+        <div class="panel-section">
+          <h3 class="panel-section-title">主题管理</h3>
+          <button class="panel-btn upload-btn" @click="showNewThemeForm">
+            <span class="btn-icon">📤</span> 上传新主题
+          </button>
+        </div>
+
+        <!-- Progress management -->
+        <div v-if="hasProgress" class="panel-section">
+          <h3 class="panel-section-title">学习进度</h3>
+          <div class="last-study-panel">
+            上次学习: {{ formatLastStudyTime }}
+          </div>
+          <div class="panel-buttons">
+            <button class="panel-btn continue-btn" @click="continueLastStudy">
+              <span class="btn-icon">⏵</span> 继续学习
+            </button>
+            <button class="panel-btn reset-btn" @click="resetProgress">
+              <span class="btn-icon">↻</span> 重置进度
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom theme card -->
+        <div class="panel-section">
+          <h3 class="panel-section-title">自定义主题</h3>
+          <div class="custom-theme-card" @click="goToCustomTheme">
+            <div class="custom-theme-icon">+</div>
+            <div class="custom-theme-content">
+              <h3>{{ customTheme.name }}</h3>
+              <p>{{ customTheme.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <header>
       <h1>闪卡学习应用</h1>
     </header>
@@ -7,30 +57,7 @@
     <!-- Loading state -->
     <LoadingOverlay v-if="isLoading" />
 
-    <!-- Theme management buttons -->
-    <div class="theme-management" v-if="!hasSelectedTheme">
-      <button class="action-btn" @click="showNewThemeForm">上传新主题</button>
-      <button v-if="hasProgress" class="continue-btn" @click="continueLastStudy">
-        <span class="btn-icon">⏵</span> 继续学习
-      </button>
-      <button v-if="hasProgress" class="reset-btn" @click="resetProgress">
-        <span class="btn-icon">↻</span> 重置进度
-      </button>
-    </div>
 
-    <!-- Last study info -->
-    <div v-if="hasProgress && !hasSelectedTheme" class="last-study-info">
-      上次学习时间: {{ formatLastStudyTime }}
-    </div>
-
-    <!-- Custom theme card -->
-    <div v-if="!hasSelectedTheme" class="custom-theme-card" @click="goToCustomTheme">
-      <div class="custom-theme-icon">+</div>
-      <div class="custom-theme-content">
-        <h3>{{ customTheme.name }}</h3>
-        <p>{{ customTheme.description }}</p>
-      </div>
-    </div>
 
     <!-- Theme selector -->
     <div v-if="!hasSelectedTheme" class="theme-selector">
@@ -69,6 +96,29 @@ const progressStore = useProgressStore()
 const showThemeUploadForm = ref(false)
 const showThemeUpdateForm = ref(false)
 const themeToUpdate = ref(null)
+const isCustomThemeCollapsed = ref(true) // Default to collapsed
+
+// Load collapsed state from localStorage
+onMounted(() => {
+  try {
+    const savedState = localStorage.getItem('customThemeCollapsed')
+    if (savedState !== null) {
+      isCustomThemeCollapsed.value = JSON.parse(savedState)
+    }
+  } catch (error) {
+    console.error('Failed to load custom theme collapsed state:', error)
+  }
+})
+
+// Save collapsed state to localStorage
+function toggleCustomThemeCollapse() {
+  isCustomThemeCollapsed.value = !isCustomThemeCollapsed.value
+  try {
+    localStorage.setItem('customThemeCollapsed', JSON.stringify(isCustomThemeCollapsed.value))
+  } catch (error) {
+    console.error('Failed to save custom theme collapsed state:', error)
+  }
+}
 
 // Computed properties
 const themes = computed(() => themeStore.themes)
@@ -194,11 +244,13 @@ watch(() => route.name, async (newRouteName) => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  position: relative;
 }
 
 header {
   text-align: center;
   margin-bottom: 40px;
+  padding-top: 20px;
 }
 
 header h1 {
@@ -290,47 +342,158 @@ header h1 {
   font-size: 1.1rem;
 }
 
-/* Custom theme card styles */
-.custom-theme-card {
-  max-width: 800px;
-  margin: 0 auto 40px;
-  background-color: #f9f0ff;
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 6px 12px rgba(142, 68, 173, 0.2);
-  transition: all 0.3s;
-  cursor: pointer;
-  border: 2px dashed #8e44ad;
-  border-left: 8px solid #8e44ad;
-  display: flex;
-  align-items: center;
-  position: relative;
+/* Management panel styles */
+.management-panel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 320px;
+  z-index: 100;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #8e44ad;
+  color: white;
+}
+
+.section-header h2 {
+  font-size: 1.2rem;
+  color: white;
+  margin: 0;
+  font-weight: 500;
+}
+
+.toggle-btn {
+  background-color: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  transition: all 0.3s;
+}
+
+.toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.toggle-icon {
+  margin-right: 5px;
+  font-size: 0.8rem;
+}
+
+/* Panel wrapper for animation */
+.panel-wrapper {
+  max-height: 600px;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  opacity: 1;
+}
+
+.panel-wrapper.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Panel section styles */
+.panel-section {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.panel-section:last-child {
+  border-bottom: none;
+}
+
+.panel-section-title {
+  font-size: 1rem;
+  color: #333;
+  margin: 0 0 10px 0;
+  font-weight: 500;
+}
+
+.panel-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.panel-btn {
+  padding: 8px 12px;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.upload-btn {
+  background-color: #4CAF50;
+  width: 100%;
+}
+
+.upload-btn:hover {
+  background-color: #3e8e41;
+}
+
+.continue-btn {
+  background-color: #2196F3;
+}
+
+.continue-btn:hover {
+  background-color: #0b7dda;
+}
+
+.reset-btn {
+  background-color: #9e9e9e;
+}
+
+.reset-btn:hover {
+  background-color: #757575;
+}
+
+.last-study-panel {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 5px;
+}
+
+/* Custom theme card styles */
+.custom-theme-card {
+  width: 100%;
+  background-color: #f9f0ff;
+  padding: 12px;
+  transition: all 0.3s;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+}
+
 .custom-theme-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 24px rgba(142, 68, 173, 0.3);
   background-color: #f5e6ff;
 }
 
-.custom-theme-card:after {
-  content: '点击创建自定义闪卡';
-  position: absolute;
-  right: -50px;
-  top: 15px;
-  background-color: #8e44ad;
-  color: white;
-  padding: 5px 40px;
-  transform: rotate(45deg);
-  font-size: 0.9rem;
-  font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
 .custom-theme-icon {
-  width: 80px;
-  height: 80px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background-color: #8e44ad;
   color: white;
@@ -338,23 +501,9 @@ header h1 {
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  font-size: 2.5rem;
-  margin-right: 30px;
+  font-size: 1.5rem;
+  margin-right: 15px;
   flex-shrink: 0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
 }
 
 .custom-theme-content {
@@ -363,14 +512,15 @@ header h1 {
 
 .custom-theme-content h3 {
   color: #333;
-  margin-bottom: 15px;
-  font-size: 2rem;
+  margin-bottom: 5px;
+  font-size: 1.1rem;
 }
 
 .custom-theme-content p {
   color: #666;
-  font-size: 1.2rem;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  line-height: 1.3;
+  margin: 0;
 }
 
 /* Theme selector styles */
@@ -397,7 +547,7 @@ header h1 {
   .container {
     max-width: 900px;
   }
-  
+
   .theme-cards {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
@@ -407,17 +557,17 @@ header h1 {
   .container {
     padding: 15px;
   }
-  
+
   header h1 {
     font-size: 2rem;
   }
-  
+
   .theme-management {
     flex-direction: column;
     align-items: center;
     gap: 10px;
   }
-  
+
   .action-btn,
   .continue-btn,
   .reset-btn {
@@ -425,32 +575,77 @@ header h1 {
     max-width: 300px;
     justify-content: center;
   }
-  
+
+  .management-panel {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin-bottom: 10px;
+    border-radius: 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Adjust header padding for mobile */
+  header {
+    padding-top: 50px;
+  }
+
+  .section-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .toggle-btn {
+    padding: 3px 8px;
+    font-size: 0.75rem;
+  }
+
+  .panel-section {
+    padding: 12px;
+  }
+
+  .panel-section-title {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+
+  .panel-btn {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+
+  .panel-buttons {
+    gap: 6px;
+  }
+
+  .last-study-panel {
+    font-size: 0.8rem;
+  }
+
   .custom-theme-card {
-    padding: 20px;
-    margin-bottom: 30px;
+    padding: 10px;
   }
-  
+
   .custom-theme-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 2rem;
-    margin-right: 20px;
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+    margin-right: 12px;
   }
-  
+
   .custom-theme-content h3 {
-    font-size: 1.6rem;
-  }
-  
-  .custom-theme-content p {
     font-size: 1rem;
   }
-  
+
+  .custom-theme-content p {
+    font-size: 0.8rem;
+  }
+
   .theme-selector h2 {
     font-size: 1.8rem;
     margin-bottom: 20px;
   }
-  
+
   .theme-cards {
     grid-template-columns: 1fr;
     padding: 0;
@@ -461,21 +656,46 @@ header h1 {
   header h1 {
     font-size: 1.8rem;
   }
-  
+
+  .section-header {
+    flex-direction: row;
+    padding: 8px 10px;
+  }
+
+  .toggle-btn {
+    padding: 2px 6px;
+    font-size: 0.7rem;
+  }
+
+  .panel-section {
+    padding: 10px;
+  }
+
+  .panel-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .panel-btn {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+
   .custom-theme-card {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .custom-theme-icon {
     margin-right: 0;
     margin-bottom: 15px;
   }
-  
+
   .custom-theme-content h3 {
     font-size: 1.4rem;
   }
-  
+
   .custom-theme-content p {
     font-size: 0.9rem;
   }
