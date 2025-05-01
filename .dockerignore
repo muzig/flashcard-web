@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+
+# Node.js
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build output
+dist
+build
+out
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Other
+README.md
+CHANGELOG.md
+RELEASE_NOTES.md
+product_roadmap.md
+LICENSE
+imgs
+
+# Make sure we don't exclude themes directory
+!themes/
+!themes/**/*

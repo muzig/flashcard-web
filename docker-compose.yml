@@ -1,0 +1,14 @@
+services:
+  flashcard-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flashcard-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    volumes:
+      - ./themes:/usr/share/nginx/html/themes:ro
+    # If you need environment variables
+    # environment:
+    #   - NODE_ENV=production

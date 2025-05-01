@@ -166,7 +166,7 @@ export const useThemeStore = defineStore('theme', () => {
         return lines.slice(1).filter(line => line.trim() && line.includes('\t')).length
       } else if (theme.cards) {
         // Load system theme content and count cards
-        const response = await fetch(`themes/${theme.id}/${theme.cards}`)
+        const response = await fetch(`/themes/${theme.id}/${theme.cards}`)
         const text = await response.text()
         const lines = text.trim().split('\n')
         // Skip header line and count non-empty lines

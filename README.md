@@ -36,6 +36,55 @@
 
 4. 访问 `http://localhost:5173`
 
+### Docker 部署
+
+#### 前提条件
+
+1. 安装 Docker：
+   - [Windows/Mac](https://www.docker.com/products/docker-desktop/)
+   - Linux: `curl -fsSL https://get.docker.com | sh`
+
+2. 安装 Docker Compose：
+   - Windows/Mac: 已包含在 Docker Desktop 中
+   - Linux:
+     ```bash
+     sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+     sudo chmod +x /usr/local/bin/docker-compose
+     ```
+
+#### 使用 Docker Compose 部署
+
+1. 使用 Docker Compose 构建并启动应用：
+   ```bash
+   docker-compose up -d
+   ```
+
+2. 访问 `http://localhost:8080`
+
+3. 停止应用：
+   ```bash
+   docker-compose down
+   ```
+
+4. 主题文件管理：
+   - Docker Compose 配置会将本地 `themes` 目录挂载到容器中
+   - 您可以直接修改本地 `themes` 目录中的文件，无需重新构建镜像
+   - 修改后刷新浏览器即可看到更新
+
+#### 仅使用 Docker 部署
+
+1. 构建 Docker 镜像：
+   ```bash
+   docker build -t flashcard-web .
+   ```
+
+2. 运行容器：
+   ```bash
+   docker run -d -p 8080:80 --name flashcard-web flashcard-web
+   ```
+
+3. 访问 `http://localhost:8080`
+
 ## 使用指南
 
 ### 开始学习
