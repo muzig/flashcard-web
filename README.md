@@ -2,7 +2,7 @@
 
 一个使用 Vue 3 构建的交互式闪卡学习应用，通过 TSV 文件加载闪卡内容，支持多主题学习和自定义闪卡。
 
-![闪卡应用截图](imgs/image.png)
+![闪卡应用截图](imgs/main-page.png)
 
 ![闪卡界面](imgs/image2.png)
 
