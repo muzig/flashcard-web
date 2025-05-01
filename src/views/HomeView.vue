@@ -1,57 +1,64 @@
 <template>
   <div class="container">
-    <!-- Management panel with toggle (top-left corner) -->
-    <div v-if="!hasSelectedTheme" class="management-panel">
-      <div class="section-header">
-        <h2>管理面板</h2>
-        <button class="toggle-btn" @click.stop="toggleCustomThemeCollapse">
-          <span class="toggle-icon">{{ isCustomThemeCollapsed ? '▼' : '▲' }}</span>
-          {{ isCustomThemeCollapsed ? '展开' : '收起' }}
-        </button>
+    <!-- Left sidebar with app title and management panel -->
+    <div v-if="!hasSelectedTheme" class="left-sidebar">
+      <!-- App title at the top of sidebar -->
+      <div class="app-title">
+        <h1>闪卡学习应用</h1>
       </div>
 
-      <!-- Panel content (collapsible) -->
-      <div class="panel-wrapper" :class="{ 'collapsed': isCustomThemeCollapsed }">
-        <!-- Theme management buttons -->
-        <div class="panel-section">
-          <h3 class="panel-section-title">主题管理</h3>
-          <button class="panel-btn upload-btn" @click="showNewThemeForm">
-            <span class="btn-icon">📤</span> 上传新主题
-          </button>
+      <!-- Management panel below title -->
+      <div class="management-panel">
+        <div class="section-header">
+          <h2>管理面板</h2>
         </div>
 
-        <!-- Progress management -->
-        <div v-if="hasProgress" class="panel-section">
-          <h3 class="panel-section-title">学习进度</h3>
-          <div class="last-study-panel">
-            上次学习: {{ formatLastStudyTime }}
-          </div>
-          <div class="panel-buttons">
-            <button class="panel-btn continue-btn" @click="continueLastStudy">
-              <span class="btn-icon">⏵</span> 继续学习
-            </button>
-            <button class="panel-btn reset-btn" @click="resetProgress">
-              <span class="btn-icon">↻</span> 重置进度
+        <!-- Panel content (always visible) -->
+        <div class="panel-wrapper">
+          <!-- Theme management buttons -->
+          <div class="panel-section">
+            <h3 class="panel-section-title">主题管理</h3>
+            <button class="panel-btn upload-btn" @click="showNewThemeForm">
+              <span class="btn-icon">📤</span> 上传新主题
             </button>
           </div>
-        </div>
 
-        <!-- Custom theme card -->
-        <div class="panel-section">
-          <h3 class="panel-section-title">自定义主题</h3>
-          <div class="custom-theme-card" @click="goToCustomTheme">
-            <div class="custom-theme-icon">+</div>
-            <div class="custom-theme-content">
-              <h3>{{ customTheme.name }}</h3>
-              <p>{{ customTheme.description }}</p>
+          <!-- Progress management -->
+          <div v-if="hasProgress" class="panel-section">
+            <h3 class="panel-section-title">学习进度</h3>
+            <div class="last-study-panel">
+              上次学习: {{ formatLastStudyTime }}
+            </div>
+            <div class="panel-buttons">
+              <button class="panel-btn continue-btn" @click="continueLastStudy">
+                <span class="btn-icon">⏵</span> 继续学习
+              </button>
+              <button class="panel-btn reset-btn" @click="resetProgress">
+                <span class="btn-icon">↻</span> 重置进度
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom theme card -->
+          <div class="panel-section">
+            <h3 class="panel-section-title">自定义主题</h3>
+            <div class="custom-theme-card" @click="goToCustomTheme">
+              <div class="custom-theme-icon">+</div>
+              <div class="custom-theme-content">
+                <h3>{{ customTheme.name }}</h3>
+                <p>{{ customTheme.description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reserved space for future options -->
+          <div class="panel-section future-options">
+            <div class="future-options-placeholder">
+              <p>更多功能即将推出...</p>
             </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="app-title">
-      <h1>闪卡学习应用</h1>
     </div>
 
     <!-- Loading state -->
@@ -60,11 +67,19 @@
 
 
     <!-- Theme selector -->
-    <div v-if="!hasSelectedTheme" class="theme-selector">
-      <h2>选择学习主题</h2>
-      <div class="theme-cards">
-        <ThemeCard v-for="theme in themes" :key="theme.id" :theme="theme" @select="goToTheme"
+    <div v-if="!hasSelectedTheme" class="theme-selector full-width">
+      <div class="theme-header">
+        <h2>选择学习主题</h2>
+        <div class="theme-filter">
+          <input type="text" v-model="searchQuery" placeholder="搜索主题..." class="search-input" />
+        </div>
+      </div>
+      <div class="theme-cards full-width-cards">
+        <ThemeCard v-for="theme in filteredThemes" :key="theme.id" :theme="theme" @select="goToTheme"
           @update="showUpdateThemeForm" @delete="deleteTheme" />
+      </div>
+      <div v-if="filteredThemes.length === 0" class="no-themes-message">
+        <p>没有找到匹配的主题</p>
       </div>
     </div>
 
@@ -96,29 +111,7 @@ const progressStore = useProgressStore()
 const showThemeUploadForm = ref(false)
 const showThemeUpdateForm = ref(false)
 const themeToUpdate = ref(null)
-const isCustomThemeCollapsed = ref(true) // Default to collapsed
-
-// Load collapsed state from localStorage
-onMounted(() => {
-  try {
-    const savedState = localStorage.getItem('customThemeCollapsed')
-    if (savedState !== null) {
-      isCustomThemeCollapsed.value = JSON.parse(savedState)
-    }
-  } catch (error) {
-    console.error('Failed to load custom theme collapsed state:', error)
-  }
-})
-
-// Save collapsed state to localStorage
-function toggleCustomThemeCollapse() {
-  isCustomThemeCollapsed.value = !isCustomThemeCollapsed.value
-  try {
-    localStorage.setItem('customThemeCollapsed', JSON.stringify(isCustomThemeCollapsed.value))
-  } catch (error) {
-    console.error('Failed to save custom theme collapsed state:', error)
-  }
-}
+const searchQuery = ref('')
 
 // Computed properties
 const themes = computed(() => themeStore.themes)
@@ -126,6 +119,17 @@ const isLoading = computed(() => themeStore.isLoading)
 const hasSelectedTheme = computed(() => themeStore.selectedTheme !== '')
 const hasProgress = computed(() => progressStore.hasProgress)
 const formatLastStudyTime = computed(() => progressStore.formatLastStudyTime)
+
+// Filtered themes based on search query
+const filteredThemes = computed(() => {
+  if (!searchQuery.value) return themes.value
+
+  const query = searchQuery.value.toLowerCase()
+  return themes.value.filter(theme =>
+    theme.name.toLowerCase().includes(query) ||
+    theme.description.toLowerCase().includes(query)
+  )
+})
 
 // Custom theme data
 const customTheme = {
@@ -241,28 +245,62 @@ watch(() => route.name, async (newRouteName) => {
 <style scoped>
 /* Component-specific styles */
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  padding: 0;
+  margin: 0;
   position: relative;
+  display: flex;
+  width: 100vw;
+  /* Use viewport width */
+  max-width: none;
+  /* Override any max-width */
+  overflow-x: hidden;
+  /* Prevent horizontal scrollbar */
+}
+
+.full-width {
+  width: 100vw !important;
+  max-width: none !important;
+  box-sizing: border-box;
+}
+
+.full-width-cards {
+  width: 100% !important;
+  max-width: none !important;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 25px !important;
+  padding-right: 15px !important;
+}
+
+/* Left sidebar styles */
+.left-sidebar {
+  width: 280px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #f8f9fa;
+  border-right: 1px solid #e9ecef;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
 }
 
 /* App title styles */
 .app-title {
-  position: absolute;
-  top: 15px;
-  left: 340px;
-  /* Position to the right of the management panel */
-  z-index: 90;
-  max-width: calc(100% - 350px);
-  /* Prevent overlap with management panel */
+  padding: 15px 0;
+  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 15px;
 }
 
 .app-title h1 {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   color: #333;
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -351,15 +389,14 @@ watch(() => route.name, async (newRouteName) => {
 
 /* Management panel styles */
 .management-panel {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 320px;
-  z-index: 100;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   background-color: white;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  margin-bottom: 15px;
 }
 
 .section-header {
@@ -378,39 +415,25 @@ watch(() => route.name, async (newRouteName) => {
   font-weight: 500;
 }
 
-.toggle-btn {
-  background-color: transparent;
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 4px;
-  padding: 4px 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  font-size: 0.8rem;
-  transition: all 0.3s;
-}
-
-.toggle-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.toggle-icon {
-  margin-right: 5px;
-  font-size: 0.8rem;
-}
-
-/* Panel wrapper for animation */
+/* Panel wrapper (always visible) */
 .panel-wrapper {
-  max-height: 600px;
-  overflow: hidden;
-  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  opacity: 1;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc #f8f9fa;
 }
 
-.panel-wrapper.collapsed {
-  max-height: 0;
-  opacity: 0;
+.panel-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel-wrapper::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.panel-wrapper::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 6px;
 }
 
 /* Panel section styles */
@@ -494,6 +517,16 @@ watch(() => route.name, async (newRouteName) => {
   align-items: center;
 }
 
+/* Future options placeholder */
+.future-options-placeholder {
+  padding: 15px 0;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  font-size: 0.9rem;
+  border-top: 1px dashed #ddd;
+}
+
 .custom-theme-card:hover {
   background-color: #f5e6ff;
 }
@@ -533,68 +566,204 @@ watch(() => route.name, async (newRouteName) => {
 /* Theme selector styles */
 .theme-selector {
   margin-bottom: 50px;
-  margin-top: 100px;
-  /* Add space for the app title */
-  position: relative;
+  padding: 20px 0 20px 30px;
+  flex: 1;
+  margin-left: 280px;
+  /* Match the width of the sidebar */
+  width: calc(100vw - 280px);
+  /* Full viewport width minus sidebar */
+  box-sizing: border-box;
+  max-width: none;
+  /* Override any max-width */
+  overflow-x: hidden;
+  /* Prevent horizontal scrollbar */
+  padding-right: 0;
+  /* Remove right padding */
+}
+
+.theme-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .theme-selector h2 {
   text-align: left;
-  margin-bottom: 30px;
-  margin-left: 20px;
+  margin: 0;
   font-size: 1.8rem;
   color: #333;
+  flex: 1;
+}
+
+.theme-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-input {
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  width: 250px;
+  transition: all 0.3s;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #8e44ad;
+  box-shadow: 0 2px 8px rgba(142, 68, 173, 0.2);
+  width: 280px;
+}
+
+.no-themes-message {
+  text-align: center;
+  padding: 40px 0;
+  color: #666;
+  font-size: 1.1rem;
+  font-style: italic;
 }
 
 .theme-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
-  padding: 0 20px;
+  padding: 0;
+  width: 100%;
+  max-width: none;
+  /* Override any max-width */
+  margin-right: 0;
+  /* Ensure no right margin */
+  margin-bottom: 30px;
 }
 
 /* Responsive styles */
-@media (max-width: 1024px) {
-  .app-title {
-    left: 340px;
-  }
-
-  .container {
-    max-width: 900px;
-  }
-
+/* Media queries for different screen widths */
+@media (min-width: 1600px) {
   .theme-cards {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 }
 
-@media (max-width: 768px) {
-  .app-title {
-    position: absolute;
-    top: 15px;
-    left: 15px;
+@media (min-width: 2000px) {
+  .theme-cards {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}
+
+@media (min-width: 2400px) {
+  .theme-cards {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+@media (min-width: 3000px) {
+  .theme-cards {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+/* Special media query for wide screens with specific aspect ratios */
+@media screen and (min-aspect-ratio: 16/9) {
+
+  .theme-cards,
+  .full-width-cards {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+  }
+}
+
+@media screen and (min-aspect-ratio: 21/9) {
+
+  .theme-cards,
+  .full-width-cards {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+    padding-right: 15px !important;
+    margin-right: 0 !important;
+    width: calc(100vw - 280px) !important;
+  }
+
+  .theme-selector.full-width {
+    width: 100vw !important;
+    padding-right: 0 !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .left-sidebar {
+    width: 250px;
+  }
+
+  .theme-selector {
+    margin-left: 250px;
+    width: calc(100vw - 250px);
+    padding-right: 0;
+  }
+
+  .theme-cards {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-right: 0;
   }
 
   .container {
-    padding: 15px;
+    width: 100vw;
+    max-width: none;
   }
 
-  header h1 {
-    font-size: 2rem;
-  }
 
-  .theme-management {
+}
+
+@media (max-width: 768px) {
+  .container {
     flex-direction: column;
-    align-items: center;
-    gap: 10px;
   }
 
-  .action-btn,
-  .continue-btn,
-  .reset-btn {
+  .left-sidebar {
     width: 100%;
-    max-width: 300px;
-    justify-content: center;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid #e9ecef;
+    padding: 10px;
+  }
+
+  .theme-selector,
+  .theme-selector.full-width {
+    margin-left: 0;
+    width: 100vw !important;
+    padding-right: 0 !important;
+  }
+
+  .theme-cards,
+  .full-width-cards {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+    padding: 0 !important;
+    gap: 20px !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+  }
+
+  .theme-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .search-input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .search-input:focus {
+    width: 100%;
   }
 
   .management-panel {
@@ -609,23 +778,18 @@ watch(() => route.name, async (newRouteName) => {
 
   /* Adjust app title for mobile */
   .app-title {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    margin: 0;
-    z-index: 110;
-    /* Above the management panel */
-    max-width: calc(100% - 100px);
-    /* Prevent overlap with toggle button */
+    padding: 10px 0;
+    margin-bottom: 10px;
+    text-align: center;
   }
 
   .app-title h1 {
     font-size: 1.3rem;
   }
 
-  /* Move management panel down to make room for title */
+  /* Adjust management panel for mobile */
   .management-panel {
-    top: 50px;
+    margin-bottom: 10px;
   }
 
   .section-header h2 {
@@ -685,36 +849,41 @@ watch(() => route.name, async (newRouteName) => {
   }
 
   .theme-selector {
-    margin-top: 100px;
+    padding: 15px;
   }
 
   .theme-cards {
-    grid-template-columns: 1fr;
-    padding: 0;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 0 5px;
   }
 }
 
 @media (max-width: 480px) {
+  .theme-cards {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+  }
+
+  .theme-header {
+    margin-bottom: 15px;
+  }
+
+  .theme-selector h2 {
+    font-size: 1.4rem;
+  }
+
   .theme-selector {
-    margin-top: 120px;
+    padding: 10px;
   }
 
   .app-title h1 {
     font-size: 1.1rem;
   }
 
-  header h1 {
-    font-size: 1.8rem;
-  }
-
   .section-header {
     flex-direction: row;
     padding: 8px 10px;
-  }
-
-  .toggle-btn {
-    padding: 2px 6px;
-    font-size: 0.7rem;
   }
 
   .panel-section {

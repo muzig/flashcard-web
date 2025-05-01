@@ -11,10 +11,7 @@ body {
     color: #333;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
+/* Removed global container styles to allow full-width layouts */
+/* Components should define their own container styles as needed */
 
 /* Additional styles from the original styles.css will be added as needed by components */

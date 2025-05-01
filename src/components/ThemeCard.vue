@@ -68,23 +68,32 @@ onMounted(async () => {
 
 <style scoped>
 .theme-card {
-  flex: 1;
-  min-width: 250px;
-  max-width: 350px;
+  width: 100%;
   background-color: white;
-  border-radius: 10px;
-  padding: 20px;
+  border-radius: 12px;
+  padding: 16px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: all 0.3s ease;
   border-left: 5px solid #ddd;
   display: flex;
   flex-direction: column;
   position: relative;
+  box-sizing: border-box;
+  justify-content: space-between;
+  min-width: 220px;
+  /* Increased minimum width for better readability */
+  aspect-ratio: 3/2;
+  /* 3:2 aspect ratio for longer cards */
+  overflow: hidden;
+  /* Ensures content doesn't overflow */
+  min-height: 180px;
+  /* Minimum height to ensure content fits */
 }
 
 .theme-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+  border-left-width: 8px;
 }
 
 .theme-card.active {
@@ -92,8 +101,8 @@ onMounted(async () => {
 }
 
 .theme-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background-color: #ff6b00;
   color: white;
@@ -101,32 +110,56 @@ onMounted(async () => {
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  font-size: 1.2rem;
-  margin-right: 15px;
+  font-size: 1.1rem;
+  margin-right: 12px;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .theme-card-content {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   cursor: pointer;
-  padding-bottom: 15px;
+  padding-bottom: 8px;
+  flex: 1;
+  min-height: 0;
+  /* Allows content to shrink if needed */
 }
 
 .theme-content {
   flex: 1;
+  min-width: 0;
+  /* Prevents overflow */
+  display: flex;
+  flex-direction: column;
 }
 
 .theme-card h3 {
   color: #333;
-  margin-bottom: 10px;
-  font-size: 1.4rem;
+  margin-bottom: 6px;
+  font-size: 1.15rem;
+  word-break: break-word;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  font-weight: 600;
 }
 
 .theme-card p {
   color: #666;
   font-size: 0.9rem;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+  flex-shrink: 0;
 }
 
 /* Progress indicator styles */
@@ -138,6 +171,7 @@ onMounted(async () => {
   overflow: hidden;
   margin-top: 8px;
   position: relative;
+  flex-shrink: 0;
 }
 
 .progress-indicator .progress-bar {
@@ -159,26 +193,27 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   border-top: 1px solid #eee;
-  padding-top: 15px;
+  padding-top: 6px;
   margin-top: auto;
-  gap: 10px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .update-btn,
 .delete-theme-btn {
-  padding: 8px 15px;
+  padding: 6px 10px;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   transition: all 0.3s;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  min-width: 80px;
+  min-width: 60px;
 }
 
 .update-btn {
@@ -191,8 +226,8 @@ onMounted(async () => {
 }
 
 .btn-icon {
-  margin-right: 5px;
-  font-size: 1.1rem;
+  margin-right: 4px;
+  font-size: 0.9rem;
 }
 
 .delete-theme-btn {
@@ -206,7 +241,23 @@ onMounted(async () => {
 
 @media (max-width: 768px) {
   .theme-card {
-    min-width: 100%;
+    padding: 14px;
+    aspect-ratio: 3/2;
+    /* Maintain 3:2 aspect ratio */
+    min-height: 160px;
+    min-width: 200px;
+  }
+
+  .theme-card h3 {
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+  }
+
+  .theme-card p {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    margin-bottom: 4px;
   }
 
   .theme-actions {
@@ -235,6 +286,62 @@ onMounted(async () => {
 
   .progress-text {
     font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .theme-card {
+    padding: 12px;
+    aspect-ratio: 3/2;
+    /* Maintain 3:2 aspect ratio */
+    min-height: 150px;
+    min-width: 160px;
+    border-radius: 10px;
+  }
+
+  .theme-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.8rem;
+    margin-right: 8px;
+  }
+
+  .theme-card h3 {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+
+  .theme-card p {
+    font-size: 0.75rem;
+    margin-bottom: 6px;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    line-height: 1.3;
+  }
+
+  .theme-card-content {
+    padding-bottom: 3px;
+  }
+
+  .progress-indicator {
+    height: 3px;
+    margin-top: 2px;
+  }
+
+  .progress-text {
+    font-size: 0.65rem;
+  }
+
+  .update-btn,
+  .delete-theme-btn {
+    padding: 3px 5px;
+    font-size: 0.65rem;
+    min-width: 40px;
+  }
+
+  .btn-icon {
+    font-size: 0.85rem;
+    margin-right: 3px;
   }
 }
 </style>
