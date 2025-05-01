@@ -50,9 +50,9 @@
       </div>
     </div>
 
-    <header>
+    <div class="app-title">
       <h1>闪卡学习应用</h1>
-    </header>
+    </div>
 
     <!-- Loading state -->
     <LoadingOverlay v-if="isLoading" />
@@ -247,16 +247,23 @@ watch(() => route.name, async (newRouteName) => {
   position: relative;
 }
 
-header {
-  text-align: center;
-  margin-bottom: 40px;
-  padding-top: 20px;
+/* App title styles */
+.app-title {
+  position: absolute;
+  top: 15px;
+  left: 340px;
+  /* Position to the right of the management panel */
+  z-index: 90;
+  max-width: calc(100% - 350px);
+  /* Prevent overlap with management panel */
 }
 
-header h1 {
-  font-size: 2.5rem;
+.app-title h1 {
+  font-size: 1.8rem;
   color: #333;
-  margin-bottom: 10px;
+  margin: 0;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 /* Theme management styles */
@@ -526,12 +533,16 @@ header h1 {
 /* Theme selector styles */
 .theme-selector {
   margin-bottom: 50px;
+  margin-top: 100px;
+  /* Add space for the app title */
+  position: relative;
 }
 
 .theme-selector h2 {
-  text-align: center;
+  text-align: left;
   margin-bottom: 30px;
-  font-size: 2rem;
+  margin-left: 20px;
+  font-size: 1.8rem;
   color: #333;
 }
 
@@ -544,6 +555,10 @@ header h1 {
 
 /* Responsive styles */
 @media (max-width: 1024px) {
+  .app-title {
+    left: 340px;
+  }
+
   .container {
     max-width: 900px;
   }
@@ -554,6 +569,12 @@ header h1 {
 }
 
 @media (max-width: 768px) {
+  .app-title {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+  }
+
   .container {
     padding: 15px;
   }
@@ -586,9 +607,25 @@ header h1 {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
-  /* Adjust header padding for mobile */
-  header {
-    padding-top: 50px;
+  /* Adjust app title for mobile */
+  .app-title {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    margin: 0;
+    z-index: 110;
+    /* Above the management panel */
+    max-width: calc(100% - 100px);
+    /* Prevent overlap with toggle button */
+  }
+
+  .app-title h1 {
+    font-size: 1.3rem;
+  }
+
+  /* Move management panel down to make room for title */
+  .management-panel {
+    top: 50px;
   }
 
   .section-header h2 {
@@ -642,8 +679,13 @@ header h1 {
   }
 
   .theme-selector h2 {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     margin-bottom: 20px;
+    margin-left: 15px;
+  }
+
+  .theme-selector {
+    margin-top: 100px;
   }
 
   .theme-cards {
@@ -653,6 +695,14 @@ header h1 {
 }
 
 @media (max-width: 480px) {
+  .theme-selector {
+    margin-top: 120px;
+  }
+
+  .app-title h1 {
+    font-size: 1.1rem;
+  }
+
   header h1 {
     font-size: 1.8rem;
   }
