@@ -23,6 +23,14 @@
     {
       "id": "ts",
       "path": "ts/meta.json"
+    },
+    {
+      "id": "rust",
+      "path": "rust/meta.json"
+    },
+    {
+      "id": "mongodb",
+      "path": "mongodb/meta.json"
     }
   ]
 }

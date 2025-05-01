@@ -1,0 +1,9 @@
+{
+    "id": "mongodb",
+    "name": "MongoDB 面试宝典",
+    "description": "深入理解MongoDB数据库的核心概念、数据模型、索引优化、分片集群等面试重点内容。",
+    "icon": "mongodb",
+    "color": "#4DB33D",
+    "category": "database",
+    "cards": "cards.tsv"
+}

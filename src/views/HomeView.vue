@@ -265,11 +265,11 @@ watch(() => route.name, async (newRouteName) => {
 
 .full-width-cards {
   width: 100% !important;
-  max-width: none !important;
+  max-width: 100% !important;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
-  gap: 25px !important;
-  padding-right: 15px !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)) !important;
+  gap: 40px !important;
+  padding-right: 20px !important;
 }
 
 /* Left sidebar styles */
@@ -632,9 +632,8 @@ watch(() => route.name, async (newRouteName) => {
 
 .theme-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 25px;
-  padding: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 30px;
   width: 100%;
   max-width: none;
   /* Override any max-width */
@@ -643,38 +642,13 @@ watch(() => route.name, async (newRouteName) => {
   margin-bottom: 30px;
 }
 
-/* Responsive styles */
-/* Media queries for different screen widths */
-@media (min-width: 1600px) {
-  .theme-cards {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
-}
-
-@media (min-width: 2000px) {
-  .theme-cards {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  }
-}
-
-@media (min-width: 2400px) {
-  .theme-cards {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  }
-}
-
-@media (min-width: 3000px) {
-  .theme-cards {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  }
-}
-
 /* Special media query for wide screens with specific aspect ratios */
 @media screen and (min-aspect-ratio: 16/9) {
 
   .theme-cards,
   .full-width-cards {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)) !important;
+    gap: 35px !important;
   }
 }
 
@@ -682,9 +656,10 @@ watch(() => route.name, async (newRouteName) => {
 
   .theme-cards,
   .full-width-cards {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
-    padding-right: 15px !important;
-    margin-right: 0 !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important;
+    gap: 35px !important;
+    padding-right: 50px !important;
+    /* margin-right: 30px !important; */
     width: calc(100vw - 280px) !important;
   }
 
@@ -706,8 +681,8 @@ watch(() => route.name, async (newRouteName) => {
   }
 
   .theme-cards {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)) !important;
+    gap: 35px;
     margin-right: 0;
   }
 
@@ -742,9 +717,9 @@ watch(() => route.name, async (newRouteName) => {
 
   .theme-cards,
   .full-width-cards {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important;
     padding: 0 !important;
-    gap: 20px !important;
+    gap: 30px !important;
     margin-right: 0 !important;
     width: 100% !important;
   }
@@ -861,8 +836,8 @@ watch(() => route.name, async (newRouteName) => {
 
 @media (max-width: 480px) {
   .theme-cards {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)) !important;
+    gap: 20px;
   }
 
   .theme-header {

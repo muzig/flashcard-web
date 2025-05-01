@@ -1,0 +1,9 @@
+{
+    "id": "rust",
+    "name": "Rust 面试宝典",
+    "description": "掌握Rust语言的所有权系统、内存安全、并发编程、错误处理等核心概念，助力面试成功。",
+    "icon": "rust",
+    "color": "#DEA584",
+    "category": "programming",
+    "cards": "cards.tsv"
+}

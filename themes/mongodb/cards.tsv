@@ -1,0 +1,13 @@
+category	question	answer
+基础概念	MongoDB 是什么类型的数据库？	MongoDB 是一种文档型 NoSQL 数据库，它以 BSON（Binary JSON）格式存储数据。MongoDB 提供高性能、高可用性和自动扩展功能，适合处理大量非结构化或半结构化数据
+数据模型	MongoDB 中的文档、集合和数据库是什么关系？	在 MongoDB 中，文档（Document）是数据的基本单位，类似于关系数据库中的行；集合（Collection）是文档的容器，类似于表；数据库（Database）是集合的容器。一个 MongoDB 实例可以有多个数据库
+数据类型	MongoDB 支持哪些数据类型？	MongoDB 支持多种数据类型，包括：字符串、整数、双精度浮点数、布尔值、日期、null、对象 ID、正则表达式、数组、嵌入式文档、二进制数据等
+索引	MongoDB 中的索引有哪些类型？	MongoDB 支持多种索引类型：1. 单字段索引 2. 复合索引 3. 多键索引（用于数组） 4. 地理空间索引 5. 文本索引 6. 哈希索引 7. TTL 索引（过期文档） 8. 唯一索引 9. 部分索引
+查询优化	如何优化 MongoDB 查询性能？	优化 MongoDB 查询性能的方法包括：1. 创建适当的索引 2. 使用投影限制返回字段 3. 使用查询分析器（explain） 4. 避免大型跳过操作 5. 使用覆盖索引查询 6. 限制结果集大小 7. 使用适当的读取关注和写入关注级别
+分片	MongoDB 分片是什么？如何工作？	分片是 MongoDB 的水平扩展方法，将数据分布在多个服务器上。分片集群包括：1. 分片（存储数据） 2. 配置服务器（存储元数据） 3. mongos 路由器（路由请求）。数据根据分片键分布在不同分片上，支持自动平衡
+复制	MongoDB 复制集如何工作？	复制集是 MongoDB 的高可用性解决方案，由一个主节点和多个从节点组成。主节点处理写操作，从节点复制数据。如果主节点失败，从节点会自动选举新的主节点。复制集提供自动故障转移和数据冗余
+事务	MongoDB 如何支持事务？	从 4.0 版本开始，MongoDB 支持多文档 ACID 事务。在复制集中，事务可以跨多个操作、文档和集合。在分片集群中（4.2 版本后），事务可以跨多个分片。事务使用 startTransaction()、commitTransaction() 和 abortTransaction() 方法
+聚合	MongoDB 聚合框架的主要特点是什么？	聚合框架是 MongoDB 的数据处理工具，允许对数据执行复杂的转换和分析。它使用管道概念，数据通过多个阶段（$match、$group、$sort、$project 等）进行处理。聚合框架支持表达式、操作符和累加器，可以执行类似 SQL GROUP BY 的操作
+安全性	MongoDB 提供哪些安全特性？	MongoDB 提供多种安全特性：1. 身份验证（SCRAM、X.509 证书等） 2. 基于角色的访问控制 3. 传输层安全（TLS/SSL） 4. 审计 5. 字段级加密 6. 客户端字段级加密 7. 网络隔离
+性能监控	如何监控 MongoDB 性能？	监控 MongoDB 性能的方法包括：1. mongostat 和 mongotop 工具 2. 数据库命令（serverStatus、dbStats） 3. MongoDB Atlas 监控 4. MongoDB Ops Manager 5. 第三方监控工具（Prometheus、Grafana 等） 6. 分析慢查询日志
+数据迁移	如何进行 MongoDB 数据迁移？	MongoDB 数据迁移方法包括：1. mongodump 和 mongorestore（逻辑备份和恢复） 2. mongoimport 和 mongoexport（JSON/CSV 导入导出） 3. MongoDB Atlas 迁移服务 4. 复制集同步 5. 使用 change streams 进行实时数据同步
